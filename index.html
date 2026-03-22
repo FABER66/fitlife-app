@@ -143,15 +143,6 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-
-.pro-sec{margin-bottom:12px}
-.pro-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.pro-ic{width:34px;height:34px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:16px}
-.pro-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:800}
-.pro-sub{font-size:11px;color:var(--mu);margin-top:2px;line-height:1.4}
-.pro-note{font-size:12px;color:var(--mu);line-height:1.6;margin-top:8px}
-.timer-warn{font-size:11px;color:var(--o);margin-top:8px;line-height:1.5;padding:8px 10px;border-radius:10px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.18)}
-
 </style>
 </head>
 <body>
@@ -418,6 +409,36 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 </div>
 
 <input type="file" id="backup-import" accept="application/json" style="display:none" onchange="importBackup(event)">
+
+
+<div class="mov" id="mod-guida">
+  <div class="mod">
+    <div class="mhnd"></div>
+    <div class="mtit" id="guida-tit">Guida esercizio</div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">Macchina / attrezzo</div>
+      <div id="guida-macchina" style="font-size:14px;font-weight:700">-</div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">Come si fa</div>
+      <div id="guida-come" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">Muscoli coinvolti</div>
+      <div id="guida-muscoli" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px">
+      <div class="ctit">Errori da evitare</div>
+      <div id="guida-errori" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
+    </div>
+
+    <button class="bsec" onclick="chiudiGuida()">Chiudi</button>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -930,7 +951,11 @@ function renderEx() {
     var tipoLabel = isTempo
       ? '<span class="ex-tipo t">&#9201; TEMPO</span>'
       : '<span class="ex-tipo r">&#128170; REPS</span>';
-    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
+    var guidaBtn = '';
+    if ((ex.nm || '').toLowerCase().indexOf('chest press') >= 0) {
+      guidaBtn = ' <button style="margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer" onclick="event.stopPropagation();apriGuidaChestPress()">Guida</button>';
+    }
+    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + guidaBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
     h += '<div class="exb' + (openEx[ex.id] ? ' op' : '') + '">';
     if (isTempo) {
       h += '<div class="shdr tempo"><span>#</span><span>DURATA</span><span>ok</span></div>';
@@ -1270,45 +1295,24 @@ function renderDiario() {
 // ============================================================
 function renderProfilo() {
   var lavLabel = {sedentario:'Sedentario', piedi:'In piedi', fisico:'Fisico'}[CU.lav] || 'Sedentario';
-  var h = '';
+  var h = '<div class="card" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div></div>';
+  h += '<div class="card"><div class="ctit">Fabbisogno calorico</div><div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div><div style="margin-top:8px;font-size:12px;color:var(--mu);line-height:1.7">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF (effetto termico cibo): <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate digerendo</div></div>';
 
-  h += '<div class="card pro-sec" style="text-align:center">';
-  h += '<div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div>';
-  h += '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div>';
-  h += '<div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div>';
-  h += '</div>';
-
-  h += '<div class="card pro-sec">';
-  h += '<div class="pro-head"><div class="pro-ic">🔥</div><div><div class="pro-ttl">Fabbisogno</div><div class="pro-sub">Il tuo motore giornaliero e il costo del tuo stile di vita</div></div></div>';
-  h += '<div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div>';
-  h += '<div class="pro-note">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF: <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate durante la digestione.</div>';
-  h += '</div>';
-
-  h += '<div class="card pro-sec">';
-  h += '<div class="pro-head"><div class="pro-ic">⚙️</div><div><div class="pro-ttl">Dati profilo</div><div class="pro-sub">Aggiorna peso, altezza, attività e obiettivo</div></div></div>';
-  h += '<div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
+  h += '<div class="card"><div class="ctit">Aggiorna dati</div><div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
   h += '<label class="lbl">Tipo di lavoro</label><select class="fi" id="ep-lav">';
   [['sedentario','Sedentario (ufficio)'],['piedi','In piedi (bar, negozio)'],['fisico','Lavoro fisico']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.lav === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Attivita fisica</label><select class="fi" id="ep-at">';
   [['1.2','Nessuna'],['1.375','Leggera'],['1.55','Moderata'],['1.725','Intensa'],['1.9','Molto intensa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (String(CU.at) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
-  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button>';
-  h += '</div>';
+  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
 
-  h += '<div class="card pro-sec">';
-  h += '<div class="pro-head"><div class="pro-ic">💾</div><div><div class="pro-ttl">Backup e export</div><div class="pro-sub">Salva i tuoi dati o portali fuori dall’app</div></div></div>';
+  h += '<div class="card"><div class="ctit">Backup e export</div>';
   h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
   h += "<button class=\"boutl\" onclick=\"document.getElementById('backup-import').click()\" style=\"margin-bottom:8px;border-color:var(--o);color:var(--o)\">Importa backup JSON</button>";
   h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
   h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
-  h += '<div class="pro-note">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div>';
-  h += '</div>';
-
-  h += '<div class="card pro-sec">';
-  h += '<div class="pro-head"><div class="pro-ic">⏱️</div><div><div class="pro-ttl">Sessione attiva</div><div class="pro-sub">Avviso se provi a chiudere con timer acceso</div></div></div>';
-  h += '<div class="timer-warn">Se il timer allenamento è attivo e provi a chiudere o ricaricare la pagina, il browser ti avviserà.</div>';
-  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
 
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
@@ -1540,11 +1544,28 @@ function exportWorkoutCSV() {
 
 
 
-window.addEventListener('beforeunload', function (e) {
-  if (!tOn) return;
-  e.preventDefault();
-  e.returnValue = '';
-});
+function apriGuidaChestPress() {
+  document.getElementById('guida-tit').textContent = 'Chest Press';
+  document.getElementById('guida-macchina').textContent = 'Chest Press Machine';
+  document.getElementById('guida-come').innerHTML =
+    '1. Regola il sedile in modo che le maniglie siano circa all’altezza del petto.<br>' +
+    '2. Appoggia bene schiena e scapole allo schienale.<br>' +
+    '3. Spingi in avanti in modo controllato senza staccare le spalle.<br>' +
+    '4. Torna lentamente senza lasciarti trascinare dal peso.';
+  document.getElementById('guida-muscoli').innerHTML =
+    'Pettorali, tricipiti, deltoide anteriore.';
+  document.getElementById('guida-errori').innerHTML =
+    '- Spingere con slancio.<br>' +
+    '- Alzare le spalle verso le orecchie.<br>' +
+    '- Estendere i gomiti in modo aggressivo.<br>' +
+    '- Tornare indietro troppo velocemente.';
+  document.getElementById('mod-guida').className = 'mov on';
+}
+
+function chiudiGuida() {
+  var el = document.getElementById('mod-guida');
+  if (el) el.className = 'mov';
+}
 
 // ============================================================
 // INIT
