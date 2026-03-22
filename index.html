@@ -143,6 +143,15 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+
+.pro-sec{margin-bottom:12px}
+.pro-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pro-ic{width:34px;height:34px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pro-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:800}
+.pro-sub{font-size:11px;color:var(--mu);margin-top:2px;line-height:1.4}
+.pro-note{font-size:12px;color:var(--mu);line-height:1.6;margin-top:8px}
+.timer-warn{font-size:11px;color:var(--o);margin-top:8px;line-height:1.5;padding:8px 10px;border-radius:10px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.18)}
+
 </style>
 </head>
 <body>
@@ -330,6 +339,34 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
     <div id="diario-list"></div>
   </div>
 
+
+  <div id="pg-progressi" class="pg">
+    <div class="ptit">Progressi</div>
+    <div class="card">
+      <div class="ctit">Indicatori chiave</div>
+      <div class="pgrid">
+        <div class="pi"><div class="pv" id="pr-avg7">-</div><div class="pl">Peso medio 7g</div></div>
+        <div class="pi"><div class="pv" id="pr-d30">-</div><div class="pl">Delta 30g</div></div>
+        <div class="pi"><div class="pv" id="pr-adh7">-</div><div class="pl">Aderenza 7g</div></div>
+        <div class="pi"><div class="pv" id="pr-wk7">-</div><div class="pl">Workout sett.</div></div>
+        <div class="pi"><div class="pv" id="pr-mp">0g</div><div class="pl">Proteine</div></div>
+        <div class="pi"><div class="pv" id="pr-mc">0g</div><div class="pl">Carb</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctit">Insight</div>
+      <div id="progress-insights" style="font-size:13px;color:var(--mu);line-height:1.6"></div>
+    </div>
+    <div class="card">
+      <div class="ctit">Peso ultimi 30 giorni</div>
+      <canvas id="progress-weight-chart" height="140" style="width:100%;display:block"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctit">Calorie ultimi 14 giorni</div>
+      <canvas id="progress-cal-chart" height="140" style="width:100%;display:block"></canvas>
+    </div>
+  </div>
+
   <div id="pg-profilo" class="pg">
     <div class="ptit">Profilo</div>
     <div id="prof-cnt"></div>
@@ -340,6 +377,7 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
     <button class="nb" onclick="mostraPg('nutri')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>Nutri</button>
     <button class="nb" onclick="mostraPg('workout')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h16"/><circle cx="3" cy="12" r="1"/><circle cx="21" cy="12" r="1"/></svg>Workout</button>
     <button class="nb" onclick="mostraPg('diario')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Diario</button>
+    <button class="nb" onclick="mostraPg('progressi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 9 9 13 13 20 6"></polyline><polyline points="20 12 20 6 14 6"></polyline></svg>Progressi</button>
     <button class="nb" onclick="mostraPg('profilo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profilo</button>
   </nav>
 </div>
@@ -379,40 +417,7 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
   </div>
 </div>
 
-
-<div class="mov" id="mod-guida">
-  <div class="mod">
-    <div class="mhnd"></div>
-    <div class="mtit" id="guida-tit">Guida esercizio</div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Figura esercizio</div>
-      <div id="guida-figura" style="display:flex;justify-content:center;align-items:center;background:var(--s2);border-radius:12px;padding:12px"></div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Macchina / attrezzo</div>
-      <div id="guida-macchina" style="font-size:14px;font-weight:700">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Come si fa</div>
-      <div id="guida-come" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Muscoli coinvolti</div>
-      <div id="guida-muscoli" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Errori da evitare</div>
-      <div id="guida-errori" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <button class="bsec" onclick="chiudiGuida()">Chiudi</button>
-  </div>
-</div>
+<input type="file" id="backup-import" accept="application/json" style="display:none" onchange="importBackup(event)">
 
 <script>
 // ============================================================
@@ -663,10 +668,7 @@ function logout() {
   localStorage.removeItem('fl5_uid');
   document.getElementById('app').className = 'scr';
   document.getElementById('auth').className = 'scr on';
-  // Tenta ripristino sessione automatico
-ripristinaSessione().then(function(ok) {
-  if (!ok) renderQuick();
-});
+  renderQuick();
 }
 
 // ============================================================
@@ -678,12 +680,13 @@ function mostraPg(p) {
   var pg = document.getElementById('pg-' + p);
   if (pg) pg.className = 'pg on';
   var nbs = document.querySelectorAll('.nb');
-  var mp = {home:0, nutri:1, workout:2, diario:3, profilo:4};
+  var mp = {home:0, nutri:1, workout:2, diario:3, progressi:4, profilo:5};
   if (mp[p] !== undefined && nbs[mp[p]]) nbs[mp[p]].className = 'nb on';
   if (p === 'home') renderHome();
   if (p === 'nutri') renderNutri();
   if (p === 'workout') renderWorkout();
   if (p === 'diario') renderDiario();
+  if (p === 'progressi') renderProgress();
   if (p === 'profilo') renderProfilo();
 }
 
@@ -927,12 +930,7 @@ function renderEx() {
     var tipoLabel = isTempo
       ? '<span class="ex-tipo t">&#9201; TEMPO</span>'
       : '<span class="ex-tipo r">&#128170; REPS</span>';
-    var guidaBtn = '';
-    var exName = (ex.nm || '').toLowerCase();
-    if (exName.indexOf('chest') >= 0) {
-      guidaBtn = ' <button style="margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer" onclick="event.stopPropagation();apriGuidaChestPress()">Guida</button>';
-    }
-    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + guidaBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
+    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
     h += '<div class="exb' + (openEx[ex.id] ? ' op' : '') + '">';
     if (isTempo) {
       h += '<div class="shdr tempo"><span>#</span><span>DURATA</span><span>ok</span></div>';
@@ -1272,17 +1270,46 @@ function renderDiario() {
 // ============================================================
 function renderProfilo() {
   var lavLabel = {sedentario:'Sedentario', piedi:'In piedi', fisico:'Fisico'}[CU.lav] || 'Sedentario';
-  var h = '<div class="card" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div></div>';
-  h += '<div class="card"><div class="ctit">Fabbisogno calorico</div><div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div><div style="margin-top:8px;font-size:12px;color:var(--mu);line-height:1.7">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF (effetto termico cibo): <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate digerendo</div></div>';
+  var h = '';
 
-  h += '<div class="card"><div class="ctit">Aggiorna dati</div><div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
+  h += '<div class="card pro-sec" style="text-align:center">';
+  h += '<div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div>';
+  h += '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">🔥</div><div><div class="pro-ttl">Fabbisogno</div><div class="pro-sub">Il tuo motore giornaliero e il costo del tuo stile di vita</div></div></div>';
+  h += '<div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div>';
+  h += '<div class="pro-note">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF: <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate durante la digestione.</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">⚙️</div><div><div class="pro-ttl">Dati profilo</div><div class="pro-sub">Aggiorna peso, altezza, attività e obiettivo</div></div></div>';
+  h += '<div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
   h += '<label class="lbl">Tipo di lavoro</label><select class="fi" id="ep-lav">';
   [['sedentario','Sedentario (ufficio)'],['piedi','In piedi (bar, negozio)'],['fisico','Lavoro fisico']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.lav === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Attivita fisica</label><select class="fi" id="ep-at">';
   [['1.2','Nessuna'],['1.375','Leggera'],['1.55','Moderata'],['1.725','Intensa'],['1.9','Molto intensa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (String(CU.at) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
-  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
+  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">💾</div><div><div class="pro-ttl">Backup e export</div><div class="pro-sub">Salva i tuoi dati o portali fuori dall’app</div></div></div>';
+  h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
+  h += "<button class=\"boutl\" onclick=\"document.getElementById('backup-import').click()\" style=\"margin-bottom:8px;border-color:var(--o);color:var(--o)\">Importa backup JSON</button>";
+  h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
+  h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
+  h += '<div class="pro-note">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">⏱️</div><div><div class="pro-ttl">Sessione attiva</div><div class="pro-sub">Avviso se provi a chiudere con timer acceso</div></div></div>';
+  h += '<div class="timer-warn">Se il timer allenamento è attivo e provi a chiudere o ricaricare la pagina, il browser ti avviserà.</div>';
+  h += '</div>';
+
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1308,57 +1335,222 @@ function aggProfilo() {
 }
 
 
-function figuraChestPressSvg() {
-  return '' +
-  '<svg width="260" height="180" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg" aria-label="Figura Chest Press">' +
-  '<rect x="18" y="24" width="224" height="132" rx="16" fill="#161616" stroke="#2c2c2c"/>' +
-  '<rect x="46" y="120" width="66" height="16" rx="8" fill="#3a3a3a"/>' +
-  '<rect x="76" y="74" width="14" height="60" rx="7" fill="#4b4b4b"/>' +
-  '<rect x="96" y="62" width="62" height="14" rx="7" fill="#4b4b4b"/>' +
-  '<rect x="152" y="82" width="34" height="12" rx="6" fill="#c8f135"/>' +
-  '<rect x="152" y="106" width="34" height="12" rx="6" fill="#c8f135"/>' +
-  '<circle cx="112" cy="74" r="11" fill="#f2f2f2"/>' +
-  '<rect x="105" y="84" width="16" height="28" rx="8" fill="#f2f2f2"/>' +
-  '<line x1="121" y1="92" x2="151" y2="88" stroke="#f2f2f2" stroke-width="8" stroke-linecap="round"/>' +
-  '<line x1="121" y1="102" x2="151" y2="112" stroke="#f2f2f2" stroke-width="8" stroke-linecap="round"/>' +
-  '<line x1="112" y1="112" x2="96" y2="134" stroke="#f2f2f2" stroke-width="8" stroke-linecap="round"/>' +
-  '<line x1="114" y1="112" x2="126" y2="134" stroke="#f2f2f2" stroke-width="8" stroke-linecap="round"/>' +
-  '<line x1="186" y1="88" x2="210" y2="88" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>' +
-  '<polygon points="210,88 200,82 200,94" fill="#ff6b35"/>' +
-  '<line x1="186" y1="112" x2="210" y2="112" stroke="#ff6b35" stroke-width="3" stroke-linecap="round"/>' +
-  '<polygon points="210,112 200,106 200,118" fill="#ff6b35"/>' +
-  '<text x="46" y="48" fill="#666" font-size="11" font-family="DM Sans, sans-serif">Chest Press Machine</text>' +
-  '</svg>';
+// ============================================================
+// PROGRESSI
+// ============================================================
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce(function(a,b){ return a+b; }, 0) / arr.length;
+}
+function round1(v) { return Math.round(v * 10) / 10; }
+
+function drawMiniChart(id, vals, color) {
+  var c = document.getElementById(id);
+  if (!c || !c.getContext) return;
+  var ctx = c.getContext('2d');
+  var w = c.clientWidth || 320;
+  var h = parseInt(c.getAttribute('height') || '140', 10);
+  c.width = w; c.height = h;
+  ctx.clearRect(0,0,w,h);
+  if (!vals || !vals.length) {
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Nessun dato disponibile', 12, 24);
+    return;
+  }
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (min === max) { min -= 1; max += 1; }
+  var left = 18, right = 8, top = 10, bottom = 16;
+  var pw = w - left - right, ph = h - top - bottom;
+  ctx.strokeStyle = '#2c2c2c';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, top); ctx.lineTo(left, h - bottom); ctx.lineTo(w - right, h - bottom); ctx.stroke();
+  ctx.strokeStyle = color || '#c8f135';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.fillStyle = color || '#c8f135';
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+  });
 }
 
-function apriGuidaChestPress() {
-  document.getElementById('guida-tit').textContent = 'Chest Press';
-  document.getElementById('guida-figura').innerHTML = figuraChestPressSvg();
-  document.getElementById('guida-macchina').textContent = 'Chest Press Machine';
-  document.getElementById('guida-come').innerHTML =
-    '1. Regola il sedile in modo che le maniglie siano circa all\'altezza del petto.<br>' +
-    '2. Appoggia bene schiena e scapole allo schienale.<br>' +
-    '3. Spingi in avanti in modo controllato senza slanci.<br>' +
-    '4. Torna lentamente senza lasciare che il peso rientri da solo.';
-  document.getElementById('guida-muscoli').innerHTML =
-    'Pettorali, tricipiti, deltoide anteriore.';
-  document.getElementById('guida-errori').innerHTML =
-    '- Alzare le spalle verso le orecchie.<br>' +
-    '- Inarcare troppo la schiena.<br>' +
-    '- Chiudere i gomiti in modo aggressivo.<br>' +
-    '- Tornare indietro troppo velocemente.';
-  document.getElementById('mod-guida').className = 'mov on';
+function renderProgress() {
+  if (!CU) return;
+  var db = loadDB();
+  var weight7 = [], weight30 = [], kcal7 = [], kcal14 = [], prot7 = [], carb7 = [];
+  var today = new Date();
+  for (var i = 0; i < 30; i++) {
+    var dt = new Date(today); dt.setDate(today.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    if (i < 7) {
+      if (log.peso > 0) weight7.push(Number(log.peso));
+      kcal7.push(tot.k || 0);
+      prot7.push(tot.p || 0);
+      carb7.push(tot.c || 0);
+    }
+    if (log.peso > 0) weight30.push(Number(log.peso));
+    if (i < 14) kcal14.push(tot.k || 0);
+  }
+  var avg7 = weight7.length ? round1(avg(weight7)) : null;
+  var delta30 = weight30.length >= 2 ? round1(weight30[0] - weight30[weight30.length - 1]) : null;
+  var adh7 = kcal7.length ? Math.round(avg(kcal7) / Math.max(CU.fab.kc, 1) * 100) : null;
+  var wk7 = db.workouts.filter(function(w) {
+    if (w.uid !== CU.id) return false;
+    var d = new Date(w.dt);
+    var diff = (today - d) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff < 7;
+  }).length;
+  document.getElementById('pr-avg7').textContent = avg7 !== null ? avg7 + ' kg' : '-';
+  document.getElementById('pr-d30').textContent = delta30 !== null ? (delta30 > 0 ? '+' : '') + delta30 + ' kg' : '-';
+  document.getElementById('pr-adh7').textContent = adh7 !== null ? adh7 + '%' : '-';
+  document.getElementById('pr-wk7').textContent = wk7;
+  document.getElementById('pr-mp').textContent = Math.round(avg(prot7)) + 'g';
+  document.getElementById('pr-mc').textContent = Math.round(avg(carb7)) + 'g';
+  var insights = [];
+  if (adh7 !== null) {
+    if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
+    else if (adh7 >= 65) insights.push('Aderenza discreta, ma puoi essere più costante.');
+    else insights.push('Aderenza bassa: stai andando spesso fuori target.');
+  }
+  if (delta30 !== null) {
+    if (delta30 < -0.5) insights.push('Il peso è in calo negli ultimi 30 giorni.');
+    else if (delta30 > 0.5) insights.push('Il peso è in aumento negli ultimi 30 giorni.');
+    else insights.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
+  }
+  if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
+  else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
+  else insights.push('Buona costanza negli allenamenti questa settimana.');
+  document.getElementById('progress-insights').innerHTML = insights.length
+    ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('')
+    : '<div style="color:var(--mu)">Nessun insight disponibile.</div>';
+  drawMiniChart('progress-weight-chart', weight30.slice().reverse(), '#3ecf8e');
+  drawMiniChart('progress-cal-chart', kcal14.slice().reverse(), '#ff6b35');
 }
 
-function chiudiGuida() {
-  var el = document.getElementById('mod-guida');
-  if (el) el.className = 'mov';
+// ============================================================
+// BACKUP E EXPORT
+// ============================================================
+function downloadFile(filename, content, mime) {
+  var blob = new Blob([content], {type: mime || 'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
 }
+
+function exportBackupJSON() {
+  if (!CU) return;
+  var db = loadDB();
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    version: '1.0',
+    user: CU,
+    logs: db.logs || {},
+    workouts: db.workouts || []
+  };
+  downloadFile('myfitlife-backup-' + dkey(new Date()) + '.json', JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function importBackup(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var parsed = JSON.parse(reader.result);
+      if (!parsed || !parsed.user) throw new Error('File backup non valido');
+      var db = loadDB();
+      var u = parsed.user;
+      CU = u;
+      var idx = db.users.findIndex(function(x){ return x.id === u.id; });
+      if (idx >= 0) db.users[idx] = u; else db.users.push(u);
+      if (parsed.logs && typeof parsed.logs === 'object') {
+        Object.keys(parsed.logs).forEach(function(k){ db.logs[k] = parsed.logs[k]; });
+      }
+      if (Array.isArray(parsed.workouts)) {
+        db.workouts = parsed.workouts;
+      }
+      saveDB(db);
+      if (u.id) {
+        localStorage.setItem('fl5_uid', u.id);
+      }
+      entrApp();
+      alert('Backup importato con successo.');
+    } catch (err) {
+      alert('Errore import backup: ' + err.message);
+    } finally {
+      var inp = document.getElementById('backup-import');
+      if (inp) inp.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function csvEscape(v) {
+  var s = String(v == null ? '' : v);
+  if (s.indexOf('"') >= 0) s = s.replace(/"/g, '""');
+  if (/[",\n]/.test(s)) s = '"' + s + '"';
+  return s;
+}
+
+function exportDiaryCSV() {
+  if (!CU) return;
+  var rows = [['data','peso','kcal_assunte','kcal_bruciate','proteine','carboidrati','grassi','bilancio_vs_fabbisogno']];
+  for (var i = 0; i < 90; i++) {
+    var dt = new Date(); dt.setDate(dt.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    var bru = log.kcalBruciate || 0;
+    if (!tot.k && !log.peso && !bru) continue;
+    var bil = (tot.k - bru) - CU.fab.kc;
+    rows.push([dk, log.peso || '', tot.k || 0, bru, tot.p || 0, tot.c || 0, tot.g || 0, bil]);
+  }
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\n');
+  downloadFile('myfitlife-diario-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function exportWorkoutCSV() {
+  if (!CU) return;
+  var db = loadDB();
+  var rows = [['data','scheda','durata_sec','kcal','esercizi','serie_totali']];
+  db.workouts.filter(function(w){ return w.uid === CU.id; }).forEach(function(w){
+    var esercizi = (w.ex || []).map(function(e){ return e.nm; }).join(' | ');
+    var serieTot = (w.ex || []).reduce(function(acc, e){ return acc + ((e.serie || []).length); }, 0);
+    rows.push([w.dt || '', w.sc || '', w.dur || 0, w.kcal || 0, esercizi, serieTot]);
+  });
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\n');
+  downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
+
+
+window.addEventListener('beforeunload', function (e) {
+  if (!tOn) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 // ============================================================
 // INIT
 // ============================================================
 renderQuick();
+ripristinaSessione();
 </script>
 </body>
 </html>
