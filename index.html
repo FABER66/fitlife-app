@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MyFitLife</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth" class="scr on">
+  <div class="alogo">My<b>FitLife</b></div>
+  <div class="asub">Allenamento · Nutrizione · AI</div>
+  <div class="acard">
+    <div class="atabs">
+      <button class="atab on" id="t-acc" data-action="show-tab" data-tab="acc">Accedi</button>
+      <button class="atab" id="t-reg" data-action="show-tab" data-tab="reg">Registrati</button>
+    </div>
+    <div class="aerr" id="aerr"></div>
+    <div id="f-acc">
+      <div class="qlist" id="qlist"></div>
+      <label class="lbl">Email</label>
+      <input class="fi" id="l-em" type="email" placeholder="tu@email.com" autocomplete="email">
+      <label class="lbl">Password</label>
+      <input class="fi" id="l-pw" type="password" placeholder="password" autocomplete="current-password">
+      <button class="bp" data-action="login">Entra</button>
+    </div>
+    <div id="f-reg" style="display:none">
+      <div class="g2">
+        <div><label class="lbl">Nome</label><input class="fi" id="r-nm" placeholder="Mario"></div>
+        <div><label class="lbl">Cognome</label><input class="fi" id="r-cg" placeholder="Rossi"></div>
+      </div>
+      <label class="lbl">Email</label><input class="fi" id="r-em" type="email" placeholder="mario@email.com">
+      <label class="lbl">Password</label><input class="fi" id="r-pw" type="password" placeholder="min 4 caratteri">
+      <div class="g2">
+        <div><label class="lbl">Eta</label><input class="fi" id="r-et" type="number" placeholder="35"></div>
+        <div><label class="lbl">Sesso</label><select class="fi" id="r-sx"><option value="M">Maschio</option><option value="F">Femmina</option></select></div>
+      </div>
+      <div class="g2">
+        <div><label class="lbl">Peso kg</label><input class="fi" id="r-ps" type="number" placeholder="80"></div>
+        <div><label class="lbl">Altezza cm</label><input class="fi" id="r-al" type="number" placeholder="175"></div>
+      </div>
+      <label class="lbl">Tipo di lavoro</label>
+      <select class="fi" id="r-lav">
+        <option value="sedentario">Sedentario (ufficio)</option>
+        <option value="piedi">In piedi (bar, negozio, cameriere)</option>
+        <option value="fisico">Lavoro fisico (operaio, muratore)</option>
+      </select>
+      <label class="lbl">Attivita fisica</label>
+      <select class="fi" id="r-at">
+        <option value="1.2">Nessuna</option>
+        <option value="1.375">Leggera 1-3 volte/sett</option>
+        <option value="1.55" selected>Moderata 3-5 volte/sett</option>
+        <option value="1.725">Intensa 6-7 volte/sett</option>
+        <option value="1.9">Molto intensa</option>
+      </select>
+      <label class="lbl">Obiettivo</label>
+      <select class="fi" id="r-ob">
+        <option value="dimagrire">Dimagrire</option>
+        <option value="mantenere" selected>Mantenere il peso</option>
+        <option value="massa">Aumentare massa</option>
+      </select>
+      <label class="lbl">Peso obiettivo kg</label>
+      <input class="fi" id="r-po" type="number" placeholder="es. 75">
+      <button class="bp" data-action="register">Crea profilo</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="scr">
+  <div class="hdr">
+    <div class="hlogo">My<span>FitLife</span></div>
+    <div class="hpill" data-action="show-page" data-page="profilo">
+      <div class="hav" id="hav">?</div>
+      <div style="font-size:13px;font-weight:600" id="hnm">-</div>
+    </div>
+  </div>
+
+  <div id="pg-home" class="pg on">
+    <div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:14px">Ciao <span id="greet-nm" style="color:var(--acc)">-</span></div>
+    <div class="sg">
+      <div class="sc"><div class="sl">Calorie oggi</div><div class="sv" id="h-kc">0</div><div class="ss" id="h-kt">/ 0 kcal</div><div class="pb"><div class="pf" id="h-kb" style="width:0%"></div></div></div>
+      <div class="sc"><div class="sl">Ultimo workout</div><div class="sv" id="h-wk" style="font-size:15px;margin-top:5px">-</div><div class="ss" id="h-ws">Nessuno</div></div>
+    </div>
+    <div class="card"><div class="ctit">Macro oggi</div>
+      <div class="mrow">
+        <div class="mp"><div class="mv" id="h-pr" style="color:#3ecf8e">0g</div><div class="ml">Proteine</div></div>
+        <div class="mp"><div class="mv" id="h-cb" style="color:#ff6b35">0g</div><div class="ml">Carb</div></div>
+        <div class="mp"><div class="mv" id="h-gr" style="color:#c8f135">0g</div><div class="ml">Grassi</div></div>
+      </div>
+    </div>
+    <button class="bp" data-action="show-page" data-page="nutri" style="margin-bottom:7px">+ Aggiungi pasto</button>
+    <button class="boutl" data-action="show-page" data-page="workout" style="margin-bottom:7px">Vai all allenamento</button>
+    <button class="boutl" data-action="show-page" data-page="diario" style="border-color:var(--g);color:var(--g)">Apri il diario</button>
+  </div>
+
+  <div id="pg-nutri" class="pg">
+    <div class="dnav">
+      <button class="dnb" data-action="change-day" data-delta="-1">&#8249;</button>
+      <div class="dlbl" id="dlbl"></div>
+      <button class="dnb" data-action="change-day" data-delta="1">&#8250;</button>
+    </div>
+    <div class="card">
+      <div style="text-align:center;padding:6px 0 12px">
+        <div class="rw">
+          <svg class="rsvg" width="130" height="130" viewBox="0 0 130 130">
+            <circle class="rbg" cx="65" cy="65" r="54"/>
+            <circle class="rfill" id="ring" cx="65" cy="65" r="54" stroke-dasharray="339" stroke-dashoffset="339"/>
+          </svg>
+          <div class="rctr"><div class="rk" id="r-kc">0</div><div class="rl">/ <span id="r-tg">0</span> kcal</div></div>
+        </div>
+        <div class="mrow">
+          <div class="mp"><div class="mv" id="m-p" style="color:#3ecf8e">0g</div><div class="ml">Proteine</div></div>
+          <div class="mp"><div class="mv" id="m-c" style="color:#ff6b35">0g</div><div class="ml">Carb</div></div>
+          <div class="mp"><div class="mv" id="m-g" style="color:#c8f135">0g</div><div class="ml">Grassi</div></div>
+        </div>
+      </div>
+    </div>
+    <div id="pasti"></div>
+    <button class="bp" data-action="open-food-modal">+ Aggiungi alimento</button>
+  </div>
+
+  <div id="pg-workout" class="pg">
+    <div class="ptit">Allenamento</div>
+    <div class="card">
+      <div class="ctit">Importa scheda con AI</div>
+      <div class="scanbox">
+        <div style="font-size:30px;margin-bottom:5px">&#128247;</div>
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px">Foto o PDF della scheda</div>
+        <div style="font-size:11px;color:var(--mu)">L AI legge gli esercizi e li divide per tipo</div>
+      </div>
+      <input type="file" id="finput" accept="image/*,application/pdf" style="display:none">
+      <button class="bp" data-action="open-file-picker" style="margin-bottom:6px">Scegli file</button>
+      <div id="fn" style="font-size:12px;color:var(--mu);text-align:center;margin-bottom:5px"></div>
+      <div class="ald" id="scan-ld">Analizzo la scheda<span class="dots"></span></div>
+      <div class="asr" id="scan-res">
+        <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:4px">Esercizi trovati</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:8px">
+          <span style="color:var(--g)">&#9201; Verde = a tempo</span> &nbsp;
+          <span style="color:var(--acc)">&#128170; Giallo = kg/reps</span>
+        </div>
+        <div id="scan-items"></div>
+        <button class="bp" data-action="add-scanned" style="margin-top:8px">Aggiungi alla scheda selezionata</button>
+      </div>
+    </div>
+    <div class="sbar" id="sbar"></div>
+    <div id="exlist"></div>
+    <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px">
+      <input class="fi" id="nex" placeholder="Nome esercizio..." style="flex:1;margin:0">
+      <select class="fi" id="nex-tipo" style="width:auto;margin:0;padding:11px 8px;flex-shrink:0">
+        <option value="reps">KG/Reps</option>
+        <option value="tempo">Tempo</option>
+      </select>
+      <button class="bp" data-action="add-exercise" style="width:auto;padding:0 14px;margin:0">+</button>
+    </div>
+    <button class="bp" data-action="save-workout">Salva sessione</button>
+  </div>
+
+  <div id="pg-diario" class="pg">
+    <div class="ptit">Diario</div>
+    <div class="card">
+      <div class="ctit">Peso di oggi</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="fi" id="peso-inp" type="number" step="0.1" min="20" max="300" placeholder="es. 82.5" style="flex:1;margin:0">
+        <button class="bp" data-action="save-weight" style="width:auto;padding:11px 16px;margin:0">Salva</button>
+      </div>
+      <div id="peso-info" style="font-size:12px;color:var(--mu);margin-top:7px"></div>
+    </div>
+    <div class="prev-card">
+      <div class="prev-tit">Previsione obiettivo peso</div>
+      <div class="prev-inp">
+        <input type="number" id="po-inp" step="0.1" min="20" max="300" placeholder="Peso obiettivo es. 78">
+        <button data-action="calculate-forecast">Calcola</button>
+      </div>
+      <div id="prev-val">-</div>
+      <div id="prev-sub"></div>
+      <div id="prev-det"></div>
+    </div>
+    <div class="ktri">
+      <div class="kc fab"><div class="kv" id="k-fab" style="color:var(--acc)">-</div><div class="kl">Fabbisogno</div></div>
+      <div class="kc ass"><div class="kv" id="k-ass" style="color:var(--g)">-</div><div class="kl">Assunte</div></div>
+      <div class="kc bru"><div class="kv" id="k-bru" style="color:var(--o)">-</div><div class="kl">Bruciate</div></div>
+    </div>
+    <div class="card" style="text-align:center;margin-bottom:12px">
+      <div class="ctit">Bilancio netto oggi</div>
+      <div id="bilancio-val" style="font-family:'Syne',sans-serif;font-size:36px;font-weight:800;line-height:1">-</div>
+      <div id="bilancio-det" style="font-size:12px;color:var(--mu);margin-top:4px"></div>
+    </div>
+    <div id="diario-list"></div>
+  </div>
+
+  <div id="pg-profilo" class="pg">
+    <div class="ptit">Profilo</div>
+    <div id="prof-cnt"></div>
+  </div>
+
+  <nav class="bnav">
+    <button class="nb on" data-action="show-page" data-page="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button>
+    <button class="nb" data-action="show-page" data-page="nutri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>Nutri</button>
+    <button class="nb" data-action="show-page" data-page="workout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h16"/><circle cx="3" cy="12" r="1"/><circle cx="21" cy="12" r="1"/></svg>Workout</button>
+    <button class="nb" data-action="show-page" data-page="diario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Diario</button>
+    <button class="nb" data-action="show-page" data-page="profilo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profilo</button>
+  </nav>
+</div>
+
+<div class="tfab" id="tfab" data-action="toggle-timer">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="9"/><polyline points="12 6 12 12 15.5 15.5"/></svg>
+  <span id="tdisp">00:00</span>
+</div>
+
+<div class="mov" id="mod-nutri">
+  <div class="mod">
+    <div class="mhnd"></div>
+    <div class="mtit">Aggiungi alimento</div>
+    <label class="lbl">Pasto</label>
+    <select class="fi" id="mn-pasto" style="margin-bottom:9px"><option>Colazione</option><option>Pranzo</option><option>Cena</option><option>Spuntino</option></select>
+    <div class="aibox">
+      <div style="font-size:11px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">AI - Descrivi cosa hai mangiato</div>
+      <div style="font-size:12px;color:var(--mu);margin-bottom:8px">Scrivi in modo naturale, l AI calcola calorie e macro</div>
+      <input class="fi" id="ai-inp" placeholder="es: pasta 150g e una mela" style="margin-bottom:7px">
+      <button class="bp" data-action="analyze-food" style="padding:10px;font-size:13px">Analizza</button>
+    </div>
+    <div class="ald" id="food-ld">Analizzo<span class="dots"></span></div>
+    <div class="ares" id="food-res">
+      <div style="font-size:11px;font-weight:700;color:var(--acc);margin-bottom:7px">Seleziona e aggiungi</div>
+      <div id="food-items"></div>
+      <button class="bp" data-action="add-selected-food" style="margin-top:9px;padding:10px;font-size:13px">Aggiungi selezionati</button>
+    </div>
+    <div class="sep">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Manuale</div>
+      <input class="fi" id="mn-nm" placeholder="Nome alimento">
+      <div class="g2"><input class="fi" id="mn-kc" type="number" placeholder="Kcal"><input class="fi" id="mn-gr" type="number" placeholder="Grammi"></div>
+      <div class="g2"><input class="fi" id="mn-pr" type="number" placeholder="Proteine g"><input class="fi" id="mn-cb" type="number" placeholder="Carboidrati g"></div>
+      <input class="fi" id="mn-gs" type="number" placeholder="Grassi g">
+      <button class="bp" data-action="add-manual-food" style="margin-top:7px">Aggiungi</button>
+    </div>
+    <button class="bsec" data-action="close-food-modal">Annulla</button>
+  </div>
+</div>
+
+
+<script src="./core.js"></script>
+<script src="./state.js"></script>
+<script src="./ui.js"></script>
+<script src="./data.js"></script>
+<script src="./auth.js"></script>
+<script src="./navigation.js"></script>
+<script src="./timer.js"></script>
+<script src="./nutrition.js"></script>
+<script src="./home.js"></script>
+<script src="./workout.js"></script>
+<script src="./diary.js"></script>
+<script src="./profile.js"></script>
+<script src="./app.js"></script>
+
+</body>
+</html>
