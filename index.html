@@ -634,6 +634,11 @@ function entrApp() {
   curD = dkey(new Date());
   mostraPg('home');
   popScanDest();
+  // Sincronizza dati da Supabase in background
+  if (AUTH_TOKEN) {
+    syncLogsFromSupabase().then(function() { renderHome(); renderNutri(); });
+    syncWorkoutsFromSupabase().then(function() { renderHome(); });
+  }
 }
 
 // Tenta ripristino sessione al caricamento pagina
@@ -713,6 +718,45 @@ function togTimer() {
 function getLog(uid, date) {
   var db = loadDB();
   return db.logs[uid + '_' + date] || {pasti:{Colazione:[], Pranzo:[], Cena:[], Spuntino:[]}, kcalBruciate:0, peso:0};
+}
+
+// Carica log da Supabase e li mette nel localStorage
+async function syncLogsFromSupabase() {
+  if (!AUTH_TOKEN || !USER_ID) return;
+  try {
+    var res = await dbCall('db', {table:'logs', method:'select', filter:{user_id: USER_ID}});
+    if (!res || !res.result) return;
+    var db = loadDB();
+    res.result.forEach(function(row) {
+      var key = USER_ID + '_' + row.data;
+      db.logs[key] = {
+        pasti: row.pasti || {Colazione:[], Pranzo:[], Cena:[], Spuntino:[]},
+        kcalBruciate: row.kcal_bruciate || 0,
+        peso: row.peso || 0
+      };
+    });
+    saveDB(db);
+  } catch(e) {}
+}
+
+// Carica workout da Supabase
+async function syncWorkoutsFromSupabase() {
+  if (!AUTH_TOKEN || !USER_ID) return;
+  try {
+    var res = await dbCall('db', {table:'workouts', method:'select', filter:{user_id: USER_ID}});
+    if (!res || !res.result) return;
+    var db = loadDB();
+    res.result.forEach(function(row) {
+      var exists = db.workouts.find(function(w) { return w.id === row.id; });
+      if (!exists) {
+        db.workouts.push({
+          id: row.id, uid: row.user_id, dt: row.dt,
+          sc: row.sc, sid: row.sid, dur: row.dur, kcal: row.kcal, ex: row.ex
+        });
+      }
+    });
+    saveDB(db);
+  } catch(e) {}
 }
 function saveLog(uid, date, log) {
   // Salva locale
@@ -1003,6 +1047,14 @@ async function salvaWorkout() {
     } catch(e) {}
   }
   var db = loadDB();
+  var wid = uid();
+  // Salva su Supabase in background
+  if (AUTH_TOKEN) {
+    dbCall('db', {
+      table: 'workouts', method: 'insert',
+      values: {id: wid, user_id: CU.id, dt: new Date().toISOString(), sc: sc.nm, sid: sc.id, dur: tSec, kcal: kcalBru, ex: fatti}
+    });
+  }
   db.workouts.unshift({
     id:uid(), uid:CU.id, dt:new Date().toISOString(),
     sc:sc.nm, sid:sc.id, dur:tSec, kcal:kcalBru,
