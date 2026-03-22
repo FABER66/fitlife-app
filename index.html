@@ -145,6 +145,12 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .hfoc b{color:var(--acc)}
 .hsmart{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .hsmart .sc{margin-bottom:0}
+.wrec{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.wri{background:var(--s2);border-radius:10px;padding:10px 6px;text-align:center}
+.wrv{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#f2f2f2}
+.wrl{font-size:10px;color:var(--mu);margin-top:2px}
+.wsum{margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:13px;color:var(--mu);line-height:1.65}
+.wsum b{color:var(--acc)}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
 </style>
@@ -249,6 +255,18 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
         <div class="pi"><div class="pv" id="ht-wk7">0</div><div class="pl">Workout sett.</div></div>
         <div class="pi"><div class="pv" id="ht-adh7">-</div><div class="pl">Aderenza 7g</div></div>
       </div>
+    </div>
+    <div class="card">
+      <div class="ctit">Recap settimanale</div>
+      <div class="wrec">
+        <div class="wri"><div class="wrv" id="wr-kcal">-</div><div class="wrl">Media kcal</div></div>
+        <div class="wri"><div class="wrv" id="wr-prot">-</div><div class="wrl">Media proteine</div></div>
+        <div class="wri"><div class="wrv" id="wr-peso">-</div><div class="wrl">Media peso</div></div>
+        <div class="wri"><div class="wrv" id="wr-delta">-</div><div class="wrl">Delta settimana</div></div>
+        <div class="wri"><div class="wrv" id="wr-work">0</div><div class="wrl">Workout fatti</div></div>
+        <div class="wri"><div class="wrv" id="wr-ader">-</div><div class="wrl">Aderenza</div></div>
+      </div>
+      <div class="wsum" id="wr-msg">Recap settimanale disponibile quando inizi a registrare pasti, peso e allenamenti.</div>
     </div>
     <button class="bp" onclick="mostraPg('nutri')" style="margin-bottom:7px">+ Aggiungi pasto</button>
     <button class="boutl" onclick="mostraPg('workout')" style="margin-bottom:7px">Vai all allenamento</button>
@@ -731,6 +749,41 @@ function getAderenza7() {
   return vals.length ? Math.round(avg(vals)) : null;
 }
 
+
+function getWeeklyRecap() {
+  var logs = getLogsDays(7);
+  var pesi = logs.filter(function(x){ return x.peso > 0; }).map(function(x){ return x.peso; });
+  var avgPeso = pesi.length ? round1(avg(pesi)) : null;
+  var delta = pesi.length >= 2 ? round1(pesi[0] - pesi[pesi.length - 1]) : null;
+  var kcal = Math.round(avg(logs.map(function(x){ return x.kcal; })));
+  var prot = Math.round(avg(logs.map(function(x){ return x.prot; })));
+  var workouts = getWeeklyWorkoutCount();
+  var aderenza = getAderenza7();
+  var score = 0;
+  if (aderenza !== null) {
+    if (aderenza >= 85) score += 2;
+    else if (aderenza >= 70) score += 1;
+  }
+  if (workouts >= 3) score += 2;
+  else if (workouts >= 1) score += 1;
+  if (prot >= ((CU.fab && CU.fab.pr) || 0) * 0.85) score += 1;
+  var stato = 'da correggere';
+  if (score >= 4) stato = 'positiva';
+  else if (score >= 2) stato = 'stabile';
+  var msg = 'Settimana <b>' + stato + '</b>. ';
+  if (aderenza !== null) msg += 'Aderenza media <b>' + aderenza + '%</b>. ';
+  msg += 'Workout fatti: <b>' + workouts + '</b>. ';
+  if (prot > 0) msg += 'Proteine medie: <b>' + prot + 'g</b>. ';
+  if (delta !== null) {
+    if (delta < -0.3) msg += 'Il peso è sceso di <b>' + Math.abs(delta) + ' kg</b>.';
+    else if (delta > 0.3) msg += 'Il peso è salito di <b>' + delta + ' kg</b>.';
+    else msg += 'Peso quasi stabile.';
+  } else {
+    msg += 'Registra più pesi per leggere meglio l’andamento.';
+  }
+  return {avgKcal:kcal, avgProt:prot, avgPeso:avgPeso, delta:delta, workouts:workouts, aderenza:aderenza, stato:stato, msg:msg};
+}
+
 function drawMiniChart(id, vals, color) {
   var c = document.getElementById(id);
   if (!c || !c.getContext) return;
@@ -924,6 +977,15 @@ function renderHome() {
   var a7 = document.getElementById('ht-avg7'); if (a7) a7.textContent = avg7 ? avg7 + ' kg' : '-';
   var w7 = document.getElementById('ht-wk7'); if (w7) w7.textContent = wk7;
   var ad7 = document.getElementById('ht-adh7'); if (ad7) ad7.textContent = adh7 !== null ? adh7 + '%' : '-';
+
+  var recap = getWeeklyRecap();
+  var rk = document.getElementById('wr-kcal'); if (rk) rk.textContent = recap.avgKcal ? recap.avgKcal : '-';
+  var rp = document.getElementById('wr-prot'); if (rp) rp.textContent = recap.avgProt ? recap.avgProt + 'g' : '-';
+  var rw = document.getElementById('wr-peso'); if (rw) rw.textContent = recap.avgPeso !== null ? recap.avgPeso + ' kg' : '-';
+  var rd = document.getElementById('wr-delta'); if (rd) rd.textContent = recap.delta !== null ? ((recap.delta > 0 ? '+' : '') + recap.delta + ' kg') : '-';
+  var rwork = document.getElementById('wr-work'); if (rwork) rwork.textContent = recap.workouts;
+  var rader = document.getElementById('wr-ader'); if (rader) rader.textContent = recap.aderenza !== null ? recap.aderenza + '%' : '-';
+  var rmsg = document.getElementById('wr-msg'); if (rmsg) rmsg.innerHTML = recap.msg;
 }
 
 
