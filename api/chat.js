@@ -13,16 +13,18 @@ export default async function handler(req, res) {
   const SKEY = process.env.SUPABASE_KEY;
 
   try {
-    // ===== REGISTRAZIONE =====
+    // ============================================================
+    // SIGNUP
+    // ============================================================
     if (body.action === 'signup') {
       const { email, password, profile } = body.data || {};
 
-      const r1 = await fetch(SURL + '/auth/v1/signup', {
+      const r1 = await fetch(`${SURL}/auth/v1/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           apikey: SKEY,
-          Authorization: 'Bearer ' + SKEY
+          Authorization: `Bearer ${SKEY}`
         },
         body: JSON.stringify({ email, password })
       });
@@ -40,50 +42,71 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Utente non creato correttamente' });
       }
 
-      // se hai già il trigger on_auth_user_created, questo update è più sicuro del POST
-      const rProf = await fetch(
-        SURL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(uid) + '&select=*',
+      // prova prima update sul profilo (utile se hai trigger che crea la riga)
+      let rProf = await fetch(
+        `${SURL}/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=*`,
         {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             apikey: SKEY,
-            Authorization: 'Bearer ' + SKEY,
+            Authorization: `Bearer ${SKEY}`,
             Prefer: 'return=representation'
           },
-          body: JSON.stringify({ em: email, ...(profile || {}) })
+          body: JSON.stringify({
+            em: email,
+            ...(profile || {})
+          })
         }
       );
 
-      const profData = await rProf.json().catch(() => null);
+      let profData = [];
+      try {
+        profData = await rProf.json();
+      } catch (_) {
+        profData = [];
+      }
 
-      // fallback: se il trigger non ha creato la riga, prova a inserirla
+      // se non esiste ancora la riga, la crea
       if (!rProf.ok || !Array.isArray(profData) || !profData.length) {
-        await fetch(SURL + '/rest/v1/profiles', {
+        const rInsert = await fetch(`${SURL}/rest/v1/profiles`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             apikey: SKEY,
-            Authorization: 'Bearer ' + SKEY,
-            Prefer: 'return=minimal'
+            Authorization: `Bearer ${SKEY}`,
+            Prefer: 'return=representation'
           },
-          body: JSON.stringify({ id: uid, em: email, ...(profile || {}) })
+          body: JSON.stringify({
+            id: uid,
+            em: email,
+            ...(profile || {})
+          })
         });
+
+        const ins = await rInsert.json().catch(() => null);
+        if (!rInsert.ok) {
+          return res.status(400).json({
+            error: ins?.message || 'Profilo non creato'
+          });
+        }
       }
 
       return res.json({ userId: uid });
     }
 
-    // ===== LOGIN =====
+    // ============================================================
+    // SIGNIN
+    // ============================================================
     if (body.action === 'signin') {
       const { email, password } = body.data || {};
 
-      const r2 = await fetch(SURL + '/auth/v1/token?grant_type=password', {
+      const r2 = await fetch(`${SURL}/auth/v1/token?grant_type=password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           apikey: SKEY,
-          Authorization: 'Bearer ' + SKEY
+          Authorization: `Bearer ${SKEY}`
         },
         body: JSON.stringify({ email, password })
       });
@@ -102,16 +125,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // ===== DATABASE =====
+    // ============================================================
+    // DATABASE
+    // ============================================================
     if (body.action === 'db') {
       const { table, method, filter, values, onConflict } = body.data || {};
       const tok = body.token || SKEY;
 
-      let url = SURL + '/rest/v1/' + table;
+      let url = `${SURL}/rest/v1/${table}`;
       const headers = {
         'Content-Type': 'application/json',
         apikey: SKEY,
-        Authorization: 'Bearer ' + tok,
+        Authorization: `Bearer ${tok}`,
         Prefer: 'return=representation'
       };
 
@@ -122,22 +147,22 @@ export default async function handler(req, res) {
 
         if (filter) {
           Object.entries(filter).forEach(([k, v]) => {
-            params.set(k, 'eq.' + v);
+            params.set(k, `eq.${v}`);
           });
         }
 
-        url += '?' + params.toString();
+        url += `?${params.toString()}`;
 
         const r3 = await fetch(url, {
           method: 'GET',
           headers
         });
 
-        const result = await r3.json();
+        const result = await r3.json().catch(() => []);
 
         if (!r3.ok) {
           return res.status(400).json({
-            error: result.message || 'Errore select database',
+            error: result?.message || 'Errore select database',
             result
           });
         }
@@ -149,10 +174,7 @@ export default async function handler(req, res) {
       if (method === 'upsert') {
         const params = new URLSearchParams();
         if (onConflict) params.set('on_conflict', onConflict);
-
-        if (params.toString()) {
-          url += '?' + params.toString();
-        }
+        if (params.toString()) url += `?${params.toString()}`;
 
         headers.Prefer = 'resolution=merge-duplicates,return=representation';
 
@@ -166,7 +188,7 @@ export default async function handler(req, res) {
 
         if (!r3.ok) {
           return res.status(400).json({
-            error: result.message || 'Errore upsert database',
+            error: result?.message || 'Errore upsert database',
             result
           });
         }
@@ -186,7 +208,7 @@ export default async function handler(req, res) {
 
         if (!r3.ok) {
           return res.status(400).json({
-            error: result.message || 'Errore insert database',
+            error: result?.message || 'Errore insert database',
             result
           });
         }
@@ -197,14 +219,15 @@ export default async function handler(req, res) {
       // UPDATE
       if (method === 'update') {
         const params = new URLSearchParams();
-        if (filter) {
-          Object.entries(filter).forEach(([k, v]) => {
-            params.set(k, 'eq.' + v);
-          });
-        }
         params.set('select', '*');
 
-        url += '?' + params.toString();
+        if (filter) {
+          Object.entries(filter).forEach(([k, v]) => {
+            params.set(k, `eq.${v}`);
+          });
+        }
+
+        url += `?${params.toString()}`;
 
         const r3 = await fetch(url, {
           method: 'PATCH',
@@ -216,7 +239,7 @@ export default async function handler(req, res) {
 
         if (!r3.ok) {
           return res.status(400).json({
-            error: result.message || 'Errore update database',
+            error: result?.message || 'Errore update database',
             result
           });
         }
@@ -227,7 +250,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Metodo database non riconosciuto' });
     }
 
-    // ===== AI ANTHROPIC =====
+    // ============================================================
+    // AI ANTHROPIC
+    // ============================================================
     if (body.payload) {
       const r4 = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -243,7 +268,7 @@ export default async function handler(req, res) {
 
       if (!r4.ok) {
         return res.status(400).json({
-          error: ai.error?.message || ai.error || 'Errore Anthropic'
+          error: ai?.error?.message || ai?.error || 'Errore Anthropic'
         });
       }
 
