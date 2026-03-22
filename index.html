@@ -141,14 +141,15 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
 .ddn{font-weight:700;color:var(--acc);font-size:12px}
 .ddb{display:flex;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)}
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
+
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+.theme-btn{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:10px 6px;cursor:pointer;text-align:center}
+.theme-btn.on{border-color:var(--acc);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
+.theme-sw{width:38px;height:38px;border-radius:50%;margin:0 auto 7px;border:2px solid rgba(255,255,255,.08);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.theme-lbl{font-size:11px;font-weight:700;color:#f2f2f2;line-height:1.2}
+
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-
-.hdr{box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.card,.sc,.mp,.pi,.exc,.dd,.prev-card{box-shadow:0 10px 24px rgba(0,0,0,.18)}
-.bnav{backdrop-filter:blur(14px);background:rgba(20,20,20,.92)}
-.bp{box-shadow:0 8px 20px rgba(0,0,0,.25)}
-
 </style>
 </head>
 <body>
@@ -666,34 +667,6 @@ function logout() {
   document.getElementById('app').className = 'scr';
   document.getElementById('auth').className = 'scr on';
   renderQuick();
-}
-
-
-// ============================================================
-// TEMI LUXURY
-// ============================================================
-var THEMES = {
-  gold: {acc:'#c6a56b', g:'#59c7c0', o:'#ff8a5b', bg:'#090909', s1:'#141414', s2:'#1c1c1c', bd:'#2c2c2c', mu:'#a79f93', txt:'#f3efe7'},
-  celeste: {acc:'#87c9ff', g:'#70e1d0', o:'#ff9a6b', bg:'#081018', s1:'#101a26', s2:'#162231', bd:'#26384d', mu:'#94a7bb', txt:'#eef6ff'},
-  verde: {acc:'#93d45c', g:'#62d2a2', o:'#ff9b6a', bg:'#0b120d', s1:'#121b14', s2:'#18231b', bd:'#2b3b30', mu:'#97aa9a', txt:'#eef7ef'},
-  sunset: {acc:'#ff9f7a', g:'#f1a4c7', o:'#ffb36b', bg:'#140d10', s1:'#1d1418', s2:'#261a20', bd:'#3a2930', mu:'#b49aa4', txt:'#fff1f4'}
-};
-
-function applyTheme(name) {
-  var t = THEMES[name] || THEMES.gold;
-  var root = document.documentElement;
-  Object.keys(t).forEach(function(k) {
-    root.style.setProperty('--' + k, t[k]);
-  });
-  localStorage.setItem('mfl_theme', name);
-}
-
-function loadTheme() {
-  applyTheme(localStorage.getItem('mfl_theme') || 'gold');
-}
-
-function themeButton(name, label) {
-  return '<button class="boutl" onclick="applyTheme(\'' + name + '\')" style="margin-bottom:8px">' + label + '</button>';
 }
 
 // ============================================================
@@ -1314,6 +1287,14 @@ function renderProfilo() {
   h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
   h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
 
+  h += '<div class="card"><div class="ctit">Tema luxury</div>';
+  h += '<div class="theme-grid">';
+  h += themeSwatchButton('gold','Gold','linear-gradient(135deg,#090909 0%,#1c1c1c 55%,#c6a56b 100%)');
+  h += themeSwatchButton('celeste','Celeste','linear-gradient(135deg,#081018 0%,#162231 55%,#87c9ff 100%)');
+  h += themeSwatchButton('verde','Verde','linear-gradient(135deg,#0b120d 0%,#18231b 55%,#93d45c 100%)');
+  h += themeSwatchButton('sunset','Sunset','linear-gradient(135deg,#140d10 0%,#261a20 55%,#ff9f7a 100%)');
+  h += '</div><div style="font-size:12px;color:var(--mu);margin-top:10px;line-height:1.6">Scegli il look dell’app. Il tema viene salvato sul dispositivo.</div></div>';
+
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1540,6 +1521,36 @@ function exportWorkoutCSV() {
   });
   var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\n');
   downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
+
+
+var THEMES = {
+  gold:{acc:'#c6a56b',g:'#59c7c0',o:'#ff8a5b',bg:'#090909',s1:'#141414',s2:'#1c1c1c',bd:'#2c2c2c',mu:'#a79f93',txt:'#f3efe7'},
+  celeste:{acc:'#87c9ff',g:'#70e1d0',o:'#ff9a6b',bg:'#081018',s1:'#101a26',s2:'#162231',bd:'#26384d',mu:'#94a7bb',txt:'#eef6ff'},
+  verde:{acc:'#93d45c',g:'#62d2a2',o:'#ff9b6a',bg:'#0b120d',s1:'#121b14',s2:'#18231b',bd:'#2b3b30',mu:'#97aa9a',txt:'#eef7ef'},
+  sunset:{acc:'#ff9f7a',g:'#f1a4c7',o:'#ffb36b',bg:'#140d10',s1:'#1d1418',s2:'#261a20',bd:'#3a2930',mu:'#b49aa4',txt:'#fff1f4'}
+};
+
+function applyTheme(name) {
+  var t = THEMES[name] || THEMES.gold;
+  Object.keys(t).forEach(function(k){
+    document.documentElement.style.setProperty('--' + k, t[k]);
+  });
+  localStorage.setItem('mfl_theme', name);
+  var btns = document.querySelectorAll('.theme-btn');
+  btns.forEach(function(b){
+    b.className = 'theme-btn' + (b.getAttribute('data-theme') === name ? ' on' : '');
+  });
+}
+
+function loadTheme() {
+  applyTheme(localStorage.getItem('mfl_theme') || 'gold');
+}
+
+function themeSwatchButton(name, label, gradient) {
+  var active = (localStorage.getItem('mfl_theme') || 'gold') === name ? ' on' : '';
+  return '<button class="theme-btn' + active + '" data-theme="' + name + '" onclick="applyTheme(\'' + name + '\')"><div class="theme-sw" style="background:' + gradient + '"></div><div class="theme-lbl">' + label + '</div></button>';
 }
 
 
