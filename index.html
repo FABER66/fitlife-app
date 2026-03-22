@@ -143,24 +143,6 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:999;min-width:220px;max-width:calc(100vw - 32px);background:#101010;border:1px solid var(--bd);border-radius:12px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.35);display:none}
-.toast.on{display:block}
-.toast.ok{border-color:rgba(62,207,142,.45)}
-.toast.err{border-color:rgba(255,107,53,.45)}
-.psec{margin-bottom:12px}
-.psec .ctit{margin-bottom:8px}
-.pnote{font-size:12px;color:var(--mu);line-height:1.6}
-.psplit{display:grid;grid-template-columns:1fr;gap:12px}
-.pcard{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
-.rowbtns{display:grid;grid-template-columns:1fr;gap:8px}
-.subtle{font-size:11px;color:var(--mu);letter-spacing:.3px}
-.warnbox{background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.24);color:#ffb08f;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;margin-bottom:12px}
-.goodbox{background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.22);color:#b9f1d5;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;margin-top:10px}
-.empty-state{background:var(--s1);border:1px dashed var(--bd);border-radius:var(--r);padding:18px 14px;text-align:center;color:var(--mu)}
-.empty-state .emo{font-size:26px;display:block;margin-bottom:6px}
-@media (min-width:720px){.psplit{grid-template-columns:1.1fr .9fr}.rowbtns{grid-template-columns:1fr 1fr}}
-
 </style>
 </head>
 <body>
@@ -251,6 +233,11 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
     <button class="bp" onclick="mostraPg('nutri')" style="margin-bottom:7px">+ Aggiungi pasto</button>
     <button class="boutl" onclick="mostraPg('workout')" style="margin-bottom:7px">Vai all allenamento</button>
     <button class="boutl" onclick="mostraPg('diario')" style="border-color:var(--g);color:var(--g)">Apri il diario</button>
+    <div id="home-empty" class="card" style="display:none;margin-top:12px;text-align:center">
+      <div style="font-size:32px;margin-bottom:8px">🚀</div>
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px">Inizia da qui</div>
+      <div style="font-size:12px;color:var(--mu)">Aggiungi il tuo primo pasto o registra un allenamento</div>
+    </div>
   </div>
 
   <div id="pg-nutri" class="pg">
@@ -670,6 +657,7 @@ async function ripristinaSessione() {
 }
 
 function logout() {
+  if (!confirm('Vuoi davvero uscire?')) return;
   CU = null;
   AUTH_TOKEN = null;
   USER_ID = null;
@@ -770,6 +758,8 @@ function renderHome() {
     document.getElementById('h-wk').textContent = '-';
     document.getElementById('h-ws').textContent = 'Nessuno ancora';
   }
+  var he = document.getElementById('home-empty');
+  if (he) he.style.display = (!tot.k && !ws.length) ? 'block' : 'none';
 }
 
 // ============================================================
@@ -803,13 +793,14 @@ function renderNutri() {
     al.forEach(function(a, i) {
       h += '<div style="display:flex;align-items:center;gap:7px;padding:7px 9px;background:var(--s2);border-radius:9px;margin-bottom:4px"><div style="flex:1"><div style="font-size:13px;font-weight:600">' + a.nm + '</div><div style="font-size:11px;color:var(--mu)">' + (a.gr ? a.gr+'g  ' : '') + ' P:' + (a.pr||0) + 'g C:' + (a.cb||0) + 'g G:' + (a.gs||0) + 'g</div></div><div style="font-family:Syne,sans-serif;font-size:13px;font-weight:800;color:var(--acc)">' + a.kc + '</div><button style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:16px;padding:0 3px" onclick="delAlim(\'' + p + '\',' + i + ')">x</button></div>';
     });
-    if (!al.length) h += '<div style="font-size:12px;color:var(--mu);padding:4px 0">Nessun alimento</div>';
+    if (!al.length) h += '<div style="font-size:12px;color:var(--mu);padding:4px 0">🍽 Nessun pasto ancora<br><span style="color:var(--mu)">Aggiungi quello che hai mangiato oggi</span></div>';
     h += '</div>';
   });
   document.getElementById('pasti').innerHTML = h;
 }
 
 function delAlim(p, i) {
+  if (!confirm('Eliminare questo alimento?')) return;
   var log = getLog(CU.id, curD);
   log.pasti[p].splice(i, 1);
   saveLog(CU.id, curD, log);
@@ -932,6 +923,10 @@ function switchS(id) { CU.actS = id; saveUser(); renderWorkout(); }
 function renderEx() {
   var sc = getScheda(), h = '';
   if (!sc) { document.getElementById('exlist').innerHTML = ''; return; }
+  if (!sc.ex.length) {
+    document.getElementById('exlist').innerHTML = '<div class="card" style="text-align:center"><div style="font-size:32px;margin-bottom:8px">🏋️</div><div style="font-weight:700;font-size:14px;margin-bottom:4px">Nessun esercizio</div><div style="font-size:12px;color:var(--mu)">Aggiungi il tuo primo esercizio o importa una scheda</div></div>';
+    return;
+  }
   sc.ex.forEach(function(ex) {
     var tot = ex.serie.length;
     var dn = ex.serie.filter(function(s) { return s.done; }).length;
@@ -985,6 +980,7 @@ function addEx() {
   saveUser(); renderEx();
 }
 function delEx(id) {
+  if (!confirm('Eliminare questo esercizio?')) return;
   var sc = getScheda();
   sc.ex = sc.ex.filter(function(e) { return e.id !== id; });
   delete openEx[id];
@@ -1270,7 +1266,7 @@ function renderDiario() {
     }
     h += '</div>';
   }
-  if (!trovati) h = '<div style="text-align:center;padding:40px 20px;color:var(--mu)"><div style="font-size:40px;margin-bottom:10px">&#128203;</div><p style="font-size:14px">Nessun dato ancora.</p></div>';
+  if (!trovati) h = '<div style="text-align:center;padding:40px 20px;color:var(--mu)"><div style="font-size:40px;margin-bottom:10px">&#128203;</div><p style="font-size:14px">📊 Nessun dato ancora.<br><span style="color:var(--mu)">Inizia registrando peso, pasti o allenamenti</span></p></div>';
   document.getElementById('diario-list').innerHTML = h;
 }
 
@@ -1279,32 +1275,26 @@ function renderDiario() {
 // ============================================================
 function renderProfilo() {
   var lavLabel = {sedentario:'Sedentario', piedi:'In piedi', fisico:'Fisico'}[CU.lav] || 'Sedentario';
-  var h = '';
-  h += '<div class="pcard" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:21px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:4px">' + CU.em + '</div><div class="goodbox">Questa è la tua area di controllo: aggiorna i dati, esporta i backup e tieni la tua app in ordine.</div></div>';
-  h += '<div class="psplit">';
-  h += '<div>';
-  h += '<div class="pcard psec"><div class="ctit">Fabbisogno calorico</div><div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div><div class="pnote" style="margin-top:8px">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>Effetto termico del cibo: <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b></div></div>';
-  h += '<div class="pcard psec"><div class="ctit">Aggiorna dati</div><div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
+  var h = '<div class="card" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div></div>';
+  h += '<div class="card"><div class="ctit">Fabbisogno calorico</div><div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div><div style="margin-top:8px;font-size:12px;color:var(--mu);line-height:1.7">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF (effetto termico cibo): <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate digerendo</div></div>';
+
+  h += '<div class="card"><div class="ctit">Aggiorna dati</div><div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
   h += '<label class="lbl">Tipo di lavoro</label><select class="fi" id="ep-lav">';
   [['sedentario','Sedentario (ufficio)'],['piedi','In piedi (bar, negozio)'],['fisico','Lavoro fisico']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.lav === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
-  h += '</select><label class="lbl">Attività fisica</label><select class="fi" id="ep-at">';
+  h += '</select><label class="lbl">Attivita fisica</label><select class="fi" id="ep-at">';
   [['1.2','Nessuna'],['1.375','Leggera'],['1.55','Moderata'],['1.725','Intensa'],['1.9','Molto intensa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (String(CU.at) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
-  h += '</div>';
-  h += '<div>';
-  h += '<div class="pcard psec"><div class="ctit">Backup e export</div><div class="rowbtns">';
-  h += '<button class="boutl" onclick="exportBackupJSON()">Esporta backup JSON</button>';
-  h += "<button class="boutl" onclick="document.getElementById('backup-import').click()" style="border-color:var(--o);color:var(--o)">Importa backup JSON</button>";
-  h += '<button class="boutl" onclick="exportDiaryCSV()" style="border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
-  h += '<button class="boutl" onclick="exportWorkoutCSV()" style="border-color:#7ab4ff;color:#7ab4ff">Esporta CSV workout</button>';
-  h += '</div><div class="pnote" style="margin-top:10px">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
-  h += '<div class="warnbox">Prima di importare un backup assicurati di aver esportato quello attuale. L’import può sovrascrivere i dati locali.</div>';
-  if (tOn) h += '<div class="warnbox">Hai il timer allenamento attivo. Se esci o ricarichi la pagina potresti perdere la sessione corrente.</div>';
+
+  h += '<div class="card"><div class="ctit">Backup e export</div>';
+  h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
+  h += "<button class=\"boutl\" onclick=\"document.getElementById('backup-import').click()\" style=\"margin-bottom:8px;border-color:var(--o);color:var(--o)\">Importa backup JSON</button>";
+  h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
+  h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
+
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
-  h += '</div>';
-  h += '</div>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
 
@@ -1382,11 +1372,13 @@ function renderProgress() {
   var db = loadDB();
   var weight7 = [], weight30 = [], kcal7 = [], kcal14 = [], prot7 = [], carb7 = [];
   var today = new Date();
+  var hasData = false;
   for (var i = 0; i < 30; i++) {
     var dt = new Date(today); dt.setDate(today.getDate() - i);
     var dk = dkey(dt);
     var log = getLog(CU.id, dk);
     var tot = getTot(log);
+    if (tot.k || log.peso || log.kcalBruciate) hasData = true;
     if (i < 7) {
       if (log.peso > 0) weight7.push(Number(log.peso));
       kcal7.push(tot.k || 0);
@@ -1396,7 +1388,7 @@ function renderProgress() {
     if (log.peso > 0) weight30.push(Number(log.peso));
     if (i < 14) kcal14.push(tot.k || 0);
   }
-  var avg7 = weight7.length ? round1(avg(weight7)) : null;
+  var avg7v = weight7.length ? round1(avg(weight7)) : null;
   var delta30 = weight30.length >= 2 ? round1(weight30[0] - weight30[weight30.length - 1]) : null;
   var adh7 = kcal7.length ? Math.round(avg(kcal7) / Math.max(CU.fab.kc, 1) * 100) : null;
   var wk7 = db.workouts.filter(function(w) {
@@ -1405,12 +1397,14 @@ function renderProgress() {
     var diff = (today - d) / (1000 * 60 * 60 * 24);
     return diff >= 0 && diff < 7;
   }).length;
-  document.getElementById('pr-avg7').textContent = avg7 !== null ? avg7 + ' kg' : '-';
+
+  document.getElementById('pr-avg7').textContent = avg7v !== null ? avg7v + ' kg' : '-';
   document.getElementById('pr-d30').textContent = delta30 !== null ? (delta30 > 0 ? '+' : '') + delta30 + ' kg' : '-';
   document.getElementById('pr-adh7').textContent = adh7 !== null ? adh7 + '%' : '-';
   document.getElementById('pr-wk7').textContent = wk7;
   document.getElementById('pr-mp').textContent = Math.round(avg(prot7)) + 'g';
   document.getElementById('pr-mc').textContent = Math.round(avg(carb7)) + 'g';
+
   var insights = [];
   if (adh7 !== null) {
     if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
@@ -1425,11 +1419,15 @@ function renderProgress() {
   if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
   else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
   else insights.push('Buona costanza negli allenamenti questa settimana.');
-  document.getElementById('progress-insights').innerHTML = insights.length
-    ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('')
-    : '<div style="color:var(--mu)">Nessun insight disponibile.</div>';
-  drawMiniChart('progress-weight-chart', weight30.slice().reverse(), '#3ecf8e');
-  drawMiniChart('progress-cal-chart', kcal14.slice().reverse(), '#ff6b35');
+
+  document.getElementById('progress-insights').innerHTML = hasData
+    ? (insights.length
+      ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('')
+      : '<div style="color:var(--mu)">Nessun insight disponibile.</div>')
+    : '<div style="text-align:center;color:var(--mu);padding:8px 0">📈 Nessun progresso disponibile<br><span style="font-size:12px">Inserisci peso e attività per vedere i tuoi risultati</span></div>';
+
+  drawMiniChart('progress-weight-chart', weight30.length ? weight30.slice().reverse() : [], '#3ecf8e');
+  drawMiniChart('progress-cal-chart', hasData ? kcal14.slice().reverse() : [], '#ff6b35');
 }
 
 // ============================================================
@@ -1461,6 +1459,11 @@ function exportBackupJSON() {
 }
 
 function importBackup(event) {
+  if (!confirm('Importando il backup sovrascriverai i dati attuali. Continuare?')) {
+    var inp0 = document.getElementById('backup-import');
+    if (inp0) inp0.value = '';
+    return;
+  }
   var file = event.target.files && event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
@@ -1532,13 +1535,6 @@ function exportWorkoutCSV() {
   downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
 
-
-
-window.addEventListener('beforeunload', function (e) {
-  if (!tOn) return;
-  e.preventDefault();
-  e.returnValue = '';
-});
 
 // ============================================================
 // INIT
