@@ -141,6 +141,13 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .ddn{font-weight:700;color:var(--acc);font-size:12px}
 .ddb{display:flex;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)}
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
+.wsum{margin-top:10px;font-size:13px;color:#d8d8d8;line-height:1.6;background:rgba(200,241,53,.06);border:1px solid rgba(200,241,53,.16);padding:10px 12px;border-radius:12px}
+.hrem{display:grid;gap:8px}
+.hremi{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
+.hremt{font-size:13px;font-weight:600;line-height:1.4}
+.hrems{font-size:11px;color:var(--mu);margin-top:2px}
+.hremb{border:none;background:var(--acc);color:#000;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.hremok{font-size:13px;color:var(--mu);line-height:1.5}
 .hfoc{font-size:13px;color:var(--mu);line-height:1.65}
 .hfoc b{color:var(--acc)}
 .hsmart{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
@@ -267,6 +274,12 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
         <div class="wri"><div class="wrv" id="wr-ader">-</div><div class="wrl">Aderenza</div></div>
       </div>
       <div class="wsum" id="wr-msg">Recap settimanale disponibile quando inizi a registrare pasti, peso e allenamenti.</div>
+    </div>
+    <div class="card">
+      <div class="ctit">Reminder utili</div>
+      <div id="h-reminders" class="hrem">
+        <div class="hremok">Tutto in ordine per oggi.</div>
+      </div>
     </div>
     <button class="bp" onclick="mostraPg('nutri')" style="margin-bottom:7px">+ Aggiungi pasto</button>
     <button class="boutl" onclick="mostraPg('workout')" style="margin-bottom:7px">Vai all allenamento</button>
@@ -926,6 +939,69 @@ function getTot(log) {
 // ============================================================
 // HOME
 // ============================================================
+function getTodayWorkoutCount() {
+  var db = loadDB();
+  var today = dkey(new Date());
+  return db.workouts.filter(function(w) { return w.uid === CU.id && w.dt && w.dt.split('T')[0] === today; }).length;
+}
+
+function getHomeReminders() {
+  var reminders = [];
+  var todayLog = getLog(CU.id, dkey(new Date()));
+  var todayTot = getTot(todayLog);
+  var todayWeight = Number(todayLog.peso || 0);
+  var todayWorkouts = getTodayWorkoutCount();
+
+  if (!todayWeight) {
+    reminders.push({
+      title: 'Non hai ancora registrato il peso di oggi',
+      sub: 'Fallo al mattino per rendere i progressi più affidabili.',
+      action: "mostraPg('diario')",
+      cta: 'Vai al diario'
+    });
+  }
+
+  if (!todayTot.k) {
+    reminders.push({
+      title: 'Oggi non hai ancora inserito pasti',
+      sub: 'Anche un inserimento rapido basta per non lasciare buchi nei dati.',
+      action: "mostraPg('nutri')",
+      cta: 'Aggiungi pasto'
+    });
+  }
+
+  if (tOn) {
+    reminders.push({
+      title: 'Hai il timer allenamento ancora attivo',
+      sub: 'Chiudi o salva la sessione per non perdere il lavoro fatto.',
+      action: "mostraPg('workout')",
+      cta: 'Vai workout'
+    });
+  } else if (!todayWorkouts) {
+    reminders.push({
+      title: 'Oggi non risulta nessun workout salvato',
+      sub: 'Se ti sei allenato, registra la sessione per tenere puliti i progressi.',
+      action: "mostraPg('workout')",
+      cta: 'Apri workout'
+    });
+  }
+
+  return reminders;
+}
+
+function renderHomeReminders() {
+  var box = document.getElementById('h-reminders');
+  if (!box) return;
+  var reminders = getHomeReminders();
+  if (!reminders.length) {
+    box.innerHTML = '<div class="hremok">Tutto in ordine per oggi. Hai già registrato gli elementi principali della giornata.</div>';
+    return;
+  }
+  box.innerHTML = reminders.map(function(r) {
+    return '<div class="hremi"><div><div class="hremt">' + r.title + '</div><div class="hrems">' + r.sub + '</div></div><button class="hremb" onclick="' + r.action + '">' + r.cta + '</button></div>';
+  }).join('');
+}
+
 function renderHome() {
   document.getElementById('greet-nm').textContent = CU.nm;
   var log = getLog(CU.id, curD), tot = getTot(log), tg = CU.fab.kc;
@@ -986,6 +1062,7 @@ function renderHome() {
   var rwork = document.getElementById('wr-work'); if (rwork) rwork.textContent = recap.workouts;
   var rader = document.getElementById('wr-ader'); if (rader) rader.textContent = recap.aderenza !== null ? recap.aderenza + '%' : '-';
   var rmsg = document.getElementById('wr-msg'); if (rmsg) rmsg.innerHTML = recap.msg;
+  renderHomeReminders();
 }
 
 
