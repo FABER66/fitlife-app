@@ -38,6 +38,7 @@ async function doAccedi() {
   if (!em) { showErr('Inserisci email.'); return; }
   if (!pw) { showErr('Inserisci password.'); return; }
   showErr('Accedo...');
+  setSyncStatus('syncing', 'Accesso...');
   var res = await dbCall('signin', {email: em, password: pw});
   if (res && res.token) {
     AUTH_TOKEN = res.token;
@@ -47,7 +48,7 @@ async function doAccedi() {
     if (pres && pres.result && pres.result.length) {
       state.user = normalizeUser(supabaseToUser(pres.result[0]));
       upsertLocalUser(state.user);
-      await hydrateLogsFromServer(USER_ID);
+      await hydrateUserData();
       entrApp();
       return;
     }
@@ -59,6 +60,7 @@ async function doAccedi() {
   saveSession(USER_ID, null);
   state.user = u;
   upsertLocalUser(state.user);
+  setSyncStatus(navigator.onLine ? 'idle' : 'offline', navigator.onLine ? 'Locale' : 'Offline');
   entrApp();
 }
 
@@ -108,6 +110,7 @@ async function doRegistra() {
     }
     state.user = normalizeUser({id: res.userId, nm:nm, cg:cg, em:em, pw:'', et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, actS:'A', apiKey:'', cre:new Date().toISOString()});
     upsertLocalUser(state.user);
+    await hydrateUserData();
     entrApp();
     return;
   }
@@ -121,6 +124,7 @@ async function doRegistra() {
   USER_ID = localUser.id;
   saveSession(USER_ID, null);
   state.user = localUser;
+  setSyncStatus(navigator.onLine ? 'idle' : 'offline', navigator.onLine ? 'Locale' : 'Offline');
   entrApp();
 }
 
@@ -149,7 +153,7 @@ async function ripristinaSessione() {
       if (pres && pres.result && pres.result.length) {
         state.user = normalizeUser(supabaseToUser(pres.result[0]));
         upsertLocalUser(state.user);
-        await hydrateLogsFromServer(USER_ID);
+        await hydrateUserData();
         entrApp();
         return true;
       }
@@ -159,6 +163,7 @@ async function ripristinaSessione() {
   if (u) {
     AUTH_TOKEN = null;
     state.user = u;
+    setSyncStatus(navigator.onLine ? 'idle' : 'offline', navigator.onLine ? 'Locale' : 'Offline');
     entrApp();
     return true;
   }
@@ -179,4 +184,6 @@ function logout() {
   document.getElementById('aerr').style.display = 'none';
   mostraTab('acc');
   renderQuick();
+  setSyncStatus(navigator.onLine ? 'idle' : 'offline', navigator.onLine ? 'Locale' : 'Offline');
 }
+
