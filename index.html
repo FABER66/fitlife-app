@@ -1231,19 +1231,28 @@ function renderWorkout() {
 
 function switchS(id) { CU.actS = id; saveUser(); renderWorkout(); }
 
-function getExerciseYoutube(name) {
-  var n = (name || '').toLowerCase();
+function getExerciseVideoUrl(name) {
+  var n = (name || "").toLowerCase();
   if (n.indexOf('chest') >= 0) return 'https://www.youtube.com/results?search_query=chest+press+machine+exercise';
   if (n.indexOf('lat') >= 0 || n.indexOf('pulldown') >= 0) return 'https://www.youtube.com/results?search_query=lat+pulldown+machine+exercise';
-  if (n.indexOf('low row') >= 0 || n.indexOf('row') >= 0) return 'https://www.youtube.com/results?search_query=low+row+machine+exercise';
-  if (n.indexOf('leg extension') >= 0 || n == 'extension') return 'https://www.youtube.com/results?search_query=leg+extension+machine+exercise';
-  if (n.indexOf('leg curl') >= 0 || n.indexOf('curl') >= 0) return 'https://www.youtube.com/results?search_query=seated+leg+curl+machine+exercise';
-  if (n.indexOf('shoulder') >= 0 && n.indexOf('press') >= 0) return 'https://www.youtube.com/results?search_query=shoulder+press+machine+exercise';
-  if (n.indexOf('abdominal') >= 0) return 'https://www.youtube.com/results?search_query=abdominal+machine+exercise';
+  if (n.indexOf('low row') >= 0 || n.indexOf('row') >= 0 || n.indexOf('rematore') >= 0) return 'https://www.youtube.com/results?search_query=low+row+machine+exercise';
+  if (n.indexOf('leg extension') >= 0 || false) return 'https://www.youtube.com/results?search_query=leg+extension+machine+exercise';
+  if (n.indexOf('leg curl') >= 0 || n.indexOf('seated leg curl') >= 0 || n.indexOf('curl') >= 0) return 'https://www.youtube.com/results?search_query=seated+leg+curl+machine+exercise';
+  if (n.indexOf('shoulder') >= 0 || n.indexOf('shoulder press') >= 0) return 'https://www.youtube.com/results?search_query=shoulder+press+machine+exercise';
+  if (n.indexOf('abdominal') >= 0 || n.indexOf('abs') >= 0) return 'https://www.youtube.com/results?search_query=abdominal+machine+exercise';
   if (n.indexOf('treadmill') >= 0) return 'https://www.youtube.com/results?search_query=treadmill+how+to+use';
-  if (n.indexOf('bike') >= 0 || n.indexOf('cyclette') >= 0) return 'https://www.youtube.com/results?search_query=upright+bike+how+to+use';
-  if (n.indexOf('ergometer') >= 0) return 'https://www.youtube.com/results?search_query=arm+ergometer+exercise';
+  if (n.indexOf('bike') >= 0 || n.indexOf('cyclette') >= 0 || n.indexOf('upright bike') >= 0) return 'https://www.youtube.com/results?search_query=upright+bike+how+to+use';
+  if (n.indexOf('arm ergometer') >= 0 || n.indexOf('ergometer') >= 0) return 'https://www.youtube.com/results?search_query=arm+ergometer+how+to+use';
   return '';
+}
+
+function openExerciseVideo(name) {
+  var url = getExerciseVideoUrl(name);
+  if (!url) {
+    showToast('Guida non disponibile per questo esercizio', 'err');
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
 }
 
 function renderEx() {
@@ -1256,11 +1265,9 @@ function renderEx() {
     var tipoLabel = isTempo
       ? '<span class="ex-tipo t">&#9201; TEMPO</span>'
       : '<span class="ex-tipo r">&#128170; REPS</span>';
-    var yt = getExerciseYoutube(ex.nm);
-    var guidaBtn = yt
-      ? ' <a href="' + yt + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;text-decoration:none">YouTube</a>'
-      : '';
-    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + guidaBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
+    var yt = getExerciseVideoUrl(ex.nm);
+    var ytBtn = yt ? ' <button style="margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer" onclick="event.stopPropagation();openExerciseVideo(' + JSON.stringify(ex.nm) + ')">YouTube</button>' : '';
+    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + ytBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
     h += '<div class="exb' + (openEx[ex.id] ? ' op' : '') + '">';
     if (isTempo) {
       h += '<div class="shdr tempo"><span>#</span><span>DURATA</span><span>ok</span></div>';
