@@ -5,12 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MyFitLife</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0e0e0e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MyFitLife">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden}
@@ -147,25 +141,17 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .ddn{font-weight:700;color:var(--acc);font-size:12px}
 .ddb{display:flex;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)}
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
-.wsum{margin-top:10px;font-size:13px;color:#d8d8d8;line-height:1.6;background:rgba(200,241,53,.06);border:1px solid rgba(200,241,53,.16);padding:10px 12px;border-radius:12px}
-.hrem{display:grid;gap:8px}
-.hremi{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:10px 12px}
-.hremt{font-size:13px;font-weight:600;line-height:1.4}
-.hrems{font-size:11px;color:var(--mu);margin-top:2px}
-.hremb{border:none;background:var(--acc);color:#000;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
-.hremok{font-size:13px;color:var(--mu);line-height:1.5}
-.hfoc{font-size:13px;color:var(--mu);line-height:1.65}
-.hfoc b{color:var(--acc)}
-.hsmart{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.hsmart .sc{margin-bottom:0}
-.wrec{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
-.wri{background:var(--s2);border-radius:10px;padding:10px 6px;text-align:center}
-.wrv{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:#f2f2f2}
-.wrl{font-size:10px;color:var(--mu);margin-top:2px}
-.wsum{margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);font-size:13px;color:var(--mu);line-height:1.65}
-.wsum b{color:var(--acc)}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+
+.pro-sec{margin-bottom:12px}
+.pro-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pro-ic{width:34px;height:34px;border-radius:10px;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pro-ttl{font-family:'Syne',sans-serif;font-size:15px;font-weight:800}
+.pro-sub{font-size:11px;color:var(--mu);margin-top:2px;line-height:1.4}
+.pro-note{font-size:12px;color:var(--mu);line-height:1.6;margin-top:8px}
+.timer-warn{font-size:11px;color:var(--o);margin-top:8px;line-height:1.5;padding:8px 10px;border-radius:10px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.18)}
+
 </style>
 </head>
 <body>
@@ -251,40 +237,6 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
         <div class="mp"><div class="mv" id="h-pr" style="color:#3ecf8e">0g</div><div class="ml">Proteine</div></div>
         <div class="mp"><div class="mv" id="h-cb" style="color:#ff6b35">0g</div><div class="ml">Carb</div></div>
         <div class="mp"><div class="mv" id="h-gr" style="color:#c8f135">0g</div><div class="ml">Grassi</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ctit">Focus di oggi</div>
-      <div id="hf-msg" class="hfoc">Carica i dati della giornata per ricevere un suggerimento utile.</div>
-    </div>
-    <div class="hsmart">
-      <div class="sc"><div class="sl">Kcal residue</div><div class="sv" id="hs-remk">0</div><div class="ss" id="hs-remk-sub">per restare in target</div></div>
-      <div class="sc"><div class="sl">Proteine da chiudere</div><div class="sv" id="hs-remp">0g</div><div class="ss" id="hs-remp-sub">verso target</div></div>
-    </div>
-    <div class="card"><div class="ctit">Trend rapido</div>
-      <div class="pgrid" style="grid-template-columns:repeat(2,1fr)">
-        <div class="pi"><div class="pv" id="ht-lastw">-</div><div class="pl">Ultimo peso</div></div>
-        <div class="pi"><div class="pv" id="ht-avg7">-</div><div class="pl">Media peso 7g</div></div>
-        <div class="pi"><div class="pv" id="ht-wk7">0</div><div class="pl">Workout sett.</div></div>
-        <div class="pi"><div class="pv" id="ht-adh7">-</div><div class="pl">Aderenza 7g</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ctit">Recap settimanale</div>
-      <div class="wrec">
-        <div class="wri"><div class="wrv" id="wr-kcal">-</div><div class="wrl">Media kcal</div></div>
-        <div class="wri"><div class="wrv" id="wr-prot">-</div><div class="wrl">Media proteine</div></div>
-        <div class="wri"><div class="wrv" id="wr-peso">-</div><div class="wrl">Media peso</div></div>
-        <div class="wri"><div class="wrv" id="wr-delta">-</div><div class="wrl">Delta settimana</div></div>
-        <div class="wri"><div class="wrv" id="wr-work">0</div><div class="wrl">Workout fatti</div></div>
-        <div class="wri"><div class="wrv" id="wr-ader">-</div><div class="wrl">Aderenza</div></div>
-      </div>
-      <div class="wsum" id="wr-msg">Recap settimanale disponibile quando inizi a registrare pasti, peso e allenamenti.</div>
-    </div>
-    <div class="card">
-      <div class="ctit">Reminder utili</div>
-      <div id="h-reminders" class="hrem">
-        <div class="hremok">Tutto in ordine per oggi.</div>
       </div>
     </div>
     <button class="bp" onclick="mostraPg('nutri')" style="margin-bottom:7px">+ Aggiungi pasto</button>
@@ -386,6 +338,7 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
     </div>
     <div id="diario-list"></div>
   </div>
+
 
   <div id="pg-progressi" class="pg">
     <div class="ptit">Progressi</div>
@@ -715,167 +668,7 @@ function logout() {
   localStorage.removeItem('fl5_uid');
   document.getElementById('app').className = 'scr';
   document.getElementById('auth').className = 'scr on';
-  // Tenta ripristino sessione automatico
-ripristinaSessione().then(function(ok) {
-  if (!ok) renderQuick();
-});
-}
-
-// ============================================================
-// PROGRESSI + HOME INTELLIGENTE
-// ============================================================
-function avg(arr) { return arr.length ? arr.reduce(function(a,b){ return a+b; }, 0) / arr.length : 0; }
-function round1(v) { return Math.round(v * 10) / 10; }
-
-function getLogsDays(days) {
-  var out = [];
-  for (var i = 0; i < days; i++) {
-    var dt = new Date(); dt.setDate(dt.getDate() - i);
-    var dk = dkey(dt);
-    var log = getLog(CU.id, dk);
-    var tot = getTot(log);
-    out.push({date: dk, peso: Number(log.peso || 0), kcal: Number(tot.k || 0), prot: Number(tot.p || 0), carb: Number(tot.c || 0), grassi: Number(tot.g || 0), bruciate: Number(log.kcalBruciate || 0)});
-  }
-  return out;
-}
-
-function getLastPeso() {
-  var logs = getLogsDays(30);
-  for (var i = 0; i < logs.length; i++) if (logs[i].peso > 0) return logs[i].peso;
-  return null;
-}
-
-function getAvgPeso(days) {
-  var vals = getLogsDays(days).filter(function(x){ return x.peso > 0; }).map(function(x){ return x.peso; });
-  return vals.length ? round1(avg(vals)) : null;
-}
-
-function getWeeklyWorkoutCount() {
-  var db = loadDB();
-  var now = new Date();
-  return db.workouts.filter(function(w) {
-    if (w.uid !== CU.id) return false;
-    var d = new Date(w.dt);
-    var diff = (now - d) / 86400000;
-    return diff >= 0 && diff < 7;
-  }).length;
-}
-
-function getAderenza7() {
-  var vals = getLogsDays(7).map(function(x) {
-    if (!CU || !CU.fab || !CU.fab.kc) return 0;
-    var diff = Math.abs(x.kcal - CU.fab.kc);
-    return Math.max(0, 100 - (diff / CU.fab.kc * 100));
-  });
-  return vals.length ? Math.round(avg(vals)) : null;
-}
-
-
-function getWeeklyRecap() {
-  var logs = getLogsDays(7);
-  var pesi = logs.filter(function(x){ return x.peso > 0; }).map(function(x){ return x.peso; });
-  var avgPeso = pesi.length ? round1(avg(pesi)) : null;
-  var delta = pesi.length >= 2 ? round1(pesi[0] - pesi[pesi.length - 1]) : null;
-  var kcal = Math.round(avg(logs.map(function(x){ return x.kcal; })));
-  var prot = Math.round(avg(logs.map(function(x){ return x.prot; })));
-  var workouts = getWeeklyWorkoutCount();
-  var aderenza = getAderenza7();
-  var score = 0;
-  if (aderenza !== null) {
-    if (aderenza >= 85) score += 2;
-    else if (aderenza >= 70) score += 1;
-  }
-  if (workouts >= 3) score += 2;
-  else if (workouts >= 1) score += 1;
-  if (prot >= ((CU.fab && CU.fab.pr) || 0) * 0.85) score += 1;
-  var stato = 'da correggere';
-  if (score >= 4) stato = 'positiva';
-  else if (score >= 2) stato = 'stabile';
-  var msg = 'Settimana <b>' + stato + '</b>. ';
-  if (aderenza !== null) msg += 'Aderenza media <b>' + aderenza + '%</b>. ';
-  msg += 'Workout fatti: <b>' + workouts + '</b>. ';
-  if (prot > 0) msg += 'Proteine medie: <b>' + prot + 'g</b>. ';
-  if (delta !== null) {
-    if (delta < -0.3) msg += 'Il peso è sceso di <b>' + Math.abs(delta) + ' kg</b>.';
-    else if (delta > 0.3) msg += 'Il peso è salito di <b>' + delta + ' kg</b>.';
-    else msg += 'Peso quasi stabile.';
-  } else {
-    msg += 'Registra più pesi per leggere meglio l’andamento.';
-  }
-  return {avgKcal:kcal, avgProt:prot, avgPeso:avgPeso, delta:delta, workouts:workouts, aderenza:aderenza, stato:stato, msg:msg};
-}
-
-function drawMiniChart(id, vals, color) {
-  var c = document.getElementById(id);
-  if (!c || !c.getContext) return;
-  var ctx = c.getContext('2d');
-  var w = c.clientWidth || 320;
-  var h = parseInt(c.getAttribute('height') || '140', 10);
-  c.width = w; c.height = h;
-  ctx.clearRect(0,0,w,h);
-  vals = (vals || []).filter(function(v){ return v !== null && !isNaN(v); });
-  if (!vals.length) {
-    ctx.fillStyle = '#666';
-    ctx.font = '12px sans-serif';
-    ctx.fillText('Nessun dato disponibile', 12, 24);
-    return;
-  }
-  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
-  if (min === max) { min -= 1; max += 1; }
-  var left = 18, right = 8, top = 10, bottom = 16;
-  var pw = w - left - right, ph = h - top - bottom;
-  ctx.strokeStyle = '#2c2c2c'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, h-bottom); ctx.lineTo(w-right, h-bottom); ctx.stroke();
-  ctx.strokeStyle = color || '#c8f135'; ctx.lineWidth = 2; ctx.beginPath();
-  vals.forEach(function(v, i) {
-    var x = left + (pw * i / Math.max(vals.length - 1, 1));
-    var y = top + ph - ((v - min) / (max - min)) * ph;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.fillStyle = color || '#c8f135';
-  vals.forEach(function(v, i) {
-    var x = left + (pw * i / Math.max(vals.length - 1, 1));
-    var y = top + ph - ((v - min) / (max - min)) * ph;
-    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
-  });
-}
-
-function renderProgress() {
-  if (!CU) return;
-  var logs30 = getLogsDays(30);
-  var logs14 = logs30.slice(0,14);
-  var peso7 = logs30.slice(0,7).filter(function(x){ return x.peso > 0; }).map(function(x){ return x.peso; });
-  var peso30 = logs30.filter(function(x){ return x.peso > 0; }).map(function(x){ return x.peso; });
-  var prot7 = logs30.slice(0,7).map(function(x){ return x.prot; });
-  var carb7 = logs30.slice(0,7).map(function(x){ return x.carb; });
-  var avg7 = peso7.length ? round1(avg(peso7)) : null;
-  var delta30 = peso30.length >= 2 ? round1(peso30[0] - peso30[peso30.length-1]) : null;
-  var adh7 = getAderenza7();
-  var wk7 = getWeeklyWorkoutCount();
-  document.getElementById('pr-avg7').textContent = avg7 !== null ? avg7 + ' kg' : '-';
-  document.getElementById('pr-d30').textContent = delta30 !== null ? (delta30 > 0 ? '+' : '') + delta30 + ' kg' : '-';
-  document.getElementById('pr-adh7').textContent = adh7 !== null ? adh7 + '%' : '-';
-  document.getElementById('pr-wk7').textContent = wk7;
-  document.getElementById('pr-mp').textContent = Math.round(avg(prot7 || [0])) + 'g';
-  document.getElementById('pr-mc').textContent = Math.round(avg(carb7 || [0])) + 'g';
-  var insights = [];
-  if (adh7 !== null) {
-    if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
-    else if (adh7 >= 65) insights.push('Aderenza discreta: puoi essere più costante.');
-    else insights.push('Aderenza bassa: stai andando spesso fuori target.');
-  }
-  if (delta30 !== null) {
-    if (delta30 < -0.5) insights.push('Il peso è in calo negli ultimi 30 giorni.');
-    else if (delta30 > 0.5) insights.push('Il peso è in aumento negli ultimi 30 giorni.');
-    else insights.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
-  }
-  if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
-  else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
-  else insights.push('Buona costanza negli allenamenti questa settimana.');
-  document.getElementById('progress-insights').innerHTML = insights.length ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('') : '<div style="color:var(--mu)">Nessun insight disponibile.</div>';
-  drawMiniChart('progress-weight-chart', peso30.slice().reverse(), '#3ecf8e');
-  drawMiniChart('progress-cal-chart', logs14.map(function(x){ return x.kcal; }).reverse(), '#ff6b35');
+  renderQuick();
 }
 
 // ============================================================
@@ -947,69 +740,6 @@ function getTot(log) {
 // ============================================================
 // HOME
 // ============================================================
-function getTodayWorkoutCount() {
-  var db = loadDB();
-  var today = dkey(new Date());
-  return db.workouts.filter(function(w) { return w.uid === CU.id && w.dt && w.dt.split('T')[0] === today; }).length;
-}
-
-function getHomeReminders() {
-  var reminders = [];
-  var todayLog = getLog(CU.id, dkey(new Date()));
-  var todayTot = getTot(todayLog);
-  var todayWeight = Number(todayLog.peso || 0);
-  var todayWorkouts = getTodayWorkoutCount();
-
-  if (!todayWeight) {
-    reminders.push({
-      title: 'Non hai ancora registrato il peso di oggi',
-      sub: 'Fallo al mattino per rendere i progressi più affidabili.',
-      action: "mostraPg('diario')",
-      cta: 'Vai al diario'
-    });
-  }
-
-  if (!todayTot.k) {
-    reminders.push({
-      title: 'Oggi non hai ancora inserito pasti',
-      sub: 'Anche un inserimento rapido basta per non lasciare buchi nei dati.',
-      action: "mostraPg('nutri')",
-      cta: 'Aggiungi pasto'
-    });
-  }
-
-  if (tOn) {
-    reminders.push({
-      title: 'Hai il timer allenamento ancora attivo',
-      sub: 'Chiudi o salva la sessione per non perdere il lavoro fatto.',
-      action: "mostraPg('workout')",
-      cta: 'Vai workout'
-    });
-  } else if (!todayWorkouts) {
-    reminders.push({
-      title: 'Oggi non risulta nessun workout salvato',
-      sub: 'Se ti sei allenato, registra la sessione per tenere puliti i progressi.',
-      action: "mostraPg('workout')",
-      cta: 'Apri workout'
-    });
-  }
-
-  return reminders;
-}
-
-function renderHomeReminders() {
-  var box = document.getElementById('h-reminders');
-  if (!box) return;
-  var reminders = getHomeReminders();
-  if (!reminders.length) {
-    box.innerHTML = '<div class="hremok">Tutto in ordine per oggi. Hai già registrato gli elementi principali della giornata.</div>';
-    return;
-  }
-  box.innerHTML = reminders.map(function(r) {
-    return '<div class="hremi"><div><div class="hremt">' + r.title + '</div><div class="hrems">' + r.sub + '</div></div><button class="hremb" onclick="' + r.action + '">' + r.cta + '</button></div>';
-  }).join('');
-}
-
 function renderHome() {
   document.getElementById('greet-nm').textContent = CU.nm;
   var log = getLog(CU.id, curD), tot = getTot(log), tg = CU.fab.kc;
@@ -1021,9 +751,9 @@ function renderHome() {
   document.getElementById('h-pr').textContent = tot.p + 'g';
   document.getElementById('h-cb').textContent = tot.c + 'g';
   document.getElementById('h-gr').textContent = tot.g + 'g';
-
   var db = loadDB();
-  var ws = db.workouts.filter(function(w) { return w.uid === CU.id; }).sort(function(a,b) { return new Date(b.dt) - new Date(a.dt); });
+  var ws = db.workouts.filter(function(w) { return w.uid === CU.id; })
+    .sort(function(a,b) { return new Date(b.dt) - new Date(a.dt); });
   if (ws.length) {
     document.getElementById('h-wk').textContent = ws[0].sc;
     document.getElementById('h-ws').textContent = fmtD(ws[0].dt.split('T')[0]);
@@ -1031,48 +761,7 @@ function renderHome() {
     document.getElementById('h-wk').textContent = '-';
     document.getElementById('h-ws').textContent = 'Nessuno ancora';
   }
-
-  var remK = tg - tot.k;
-  var remP = (CU.fab.pr || 0) - tot.p;
-  var lastW = getLastPeso();
-  var avg7 = getAvgPeso(7);
-  var wk7 = getWeeklyWorkoutCount();
-  var adh7 = getAderenza7();
-
-  var remKEl = document.getElementById('hs-remk');
-  var remKSub = document.getElementById('hs-remk-sub');
-  if (remKEl) remKEl.textContent = (remK > 0 ? remK : '+' + Math.abs(remK));
-  if (remKSub) remKSub.textContent = remK >= 0 ? 'per restare in target' : 'sopra target oggi';
-
-  var remPEl = document.getElementById('hs-remp');
-  var remPSub = document.getElementById('hs-remp-sub');
-  if (remPEl) remPEl.textContent = (remP > 0 ? Math.round(remP) : '+' + Math.abs(Math.round(remP))) + 'g';
-  if (remPSub) remPSub.textContent = remP >= 0 ? 'per chiudere il target' : 'target già superato';
-
-  var msg = '';
-  if (remK > 250) msg = 'Hai ancora <b>' + remK + ' kcal</b> disponibili oggi. Chiudi bene la giornata senza sforare.';
-  else if (remK >= 0) msg = 'Sei quasi sul target: ti restano <b>' + remK + ' kcal</b>.';
-  else msg = 'Sei sopra target di <b>' + Math.abs(remK) + ' kcal</b>. Meglio alleggerire il resto della giornata.';
-  if (remP > 20) msg += ' Ti mancano anche <b>' + Math.round(remP) + 'g di proteine</b>.';
-  else if (tot.p > 0) msg += ' Proteine quasi chiuse.';
-  var hf = document.getElementById('hf-msg'); if (hf) hf.innerHTML = msg;
-
-  var lw = document.getElementById('ht-lastw'); if (lw) lw.textContent = lastW ? round1(lastW) + ' kg' : '-';
-  var a7 = document.getElementById('ht-avg7'); if (a7) a7.textContent = avg7 ? avg7 + ' kg' : '-';
-  var w7 = document.getElementById('ht-wk7'); if (w7) w7.textContent = wk7;
-  var ad7 = document.getElementById('ht-adh7'); if (ad7) ad7.textContent = adh7 !== null ? adh7 + '%' : '-';
-
-  var recap = getWeeklyRecap();
-  var rk = document.getElementById('wr-kcal'); if (rk) rk.textContent = recap.avgKcal ? recap.avgKcal : '-';
-  var rp = document.getElementById('wr-prot'); if (rp) rp.textContent = recap.avgProt ? recap.avgProt + 'g' : '-';
-  var rw = document.getElementById('wr-peso'); if (rw) rw.textContent = recap.avgPeso !== null ? recap.avgPeso + ' kg' : '-';
-  var rd = document.getElementById('wr-delta'); if (rd) rd.textContent = recap.delta !== null ? ((recap.delta > 0 ? '+' : '') + recap.delta + ' kg') : '-';
-  var rwork = document.getElementById('wr-work'); if (rwork) rwork.textContent = recap.workouts;
-  var rader = document.getElementById('wr-ader'); if (rader) rader.textContent = recap.aderenza !== null ? recap.aderenza + '%' : '-';
-  var rmsg = document.getElementById('wr-msg'); if (rmsg) rmsg.innerHTML = recap.msg;
-  renderHomeReminders();
 }
-
 
 // ============================================================
 // NUTRIZIONE
@@ -1231,30 +920,6 @@ function renderWorkout() {
 
 function switchS(id) { CU.actS = id; saveUser(); renderWorkout(); }
 
-function getExerciseVideoUrl(name) {
-  var n = (name || "").toLowerCase();
-  if (n.indexOf('chest') >= 0) return 'https://www.youtube.com/results?search_query=chest+press+machine+exercise';
-  if (n.indexOf('lat') >= 0 || n.indexOf('pulldown') >= 0) return 'https://www.youtube.com/results?search_query=lat+pulldown+machine+exercise';
-  if (n.indexOf('low row') >= 0 || n.indexOf('row') >= 0 || n.indexOf('rematore') >= 0) return 'https://www.youtube.com/results?search_query=low+row+machine+exercise';
-  if (n.indexOf('leg extension') >= 0 || false) return 'https://www.youtube.com/results?search_query=leg+extension+machine+exercise';
-  if (n.indexOf('leg curl') >= 0 || n.indexOf('seated leg curl') >= 0 || n.indexOf('curl') >= 0) return 'https://www.youtube.com/results?search_query=seated+leg+curl+machine+exercise';
-  if (n.indexOf('shoulder') >= 0 || n.indexOf('shoulder press') >= 0) return 'https://www.youtube.com/results?search_query=shoulder+press+machine+exercise';
-  if (n.indexOf('abdominal') >= 0 || n.indexOf('abs') >= 0) return 'https://www.youtube.com/results?search_query=abdominal+machine+exercise';
-  if (n.indexOf('treadmill') >= 0) return 'https://www.youtube.com/results?search_query=treadmill+how+to+use';
-  if (n.indexOf('bike') >= 0 || n.indexOf('cyclette') >= 0 || n.indexOf('upright bike') >= 0) return 'https://www.youtube.com/results?search_query=upright+bike+how+to+use';
-  if (n.indexOf('arm ergometer') >= 0 || n.indexOf('ergometer') >= 0) return 'https://www.youtube.com/results?search_query=arm+ergometer+how+to+use';
-  return '';
-}
-
-function openExerciseVideo(name) {
-  var url = getExerciseVideoUrl(name);
-  if (!url) {
-    showToast('Guida non disponibile per questo esercizio', 'err');
-    return;
-  }
-  window.open(url, '_blank', 'noopener');
-}
-
 function renderEx() {
   var sc = getScheda(), h = '';
   if (!sc) { document.getElementById('exlist').innerHTML = ''; return; }
@@ -1265,9 +930,7 @@ function renderEx() {
     var tipoLabel = isTempo
       ? '<span class="ex-tipo t">&#9201; TEMPO</span>'
       : '<span class="ex-tipo r">&#128170; REPS</span>';
-    var yt = getExerciseVideoUrl(ex.nm);
-    var ytBtn = yt ? ' <button style="margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer" onclick="event.stopPropagation();openExerciseVideo(' + JSON.stringify(ex.nm) + ')">YouTube</button>' : '';
-    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + ytBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
+    h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
     h += '<div class="exb' + (openEx[ex.id] ? ' op' : '') + '">';
     if (isTempo) {
       h += '<div class="shdr tempo"><span>#</span><span>DURATA</span><span>ok</span></div>';
@@ -1607,24 +1270,46 @@ function renderDiario() {
 // ============================================================
 function renderProfilo() {
   var lavLabel = {sedentario:'Sedentario', piedi:'In piedi', fisico:'Fisico'}[CU.lav] || 'Sedentario';
-  var h = '<div class="card" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div></div>';
-  h += '<div class="card"><div class="ctit">Fabbisogno calorico</div><div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div><div style="margin-top:8px;font-size:12px;color:var(--mu);line-height:1.7">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF (effetto termico cibo): <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate digerendo</div></div>';
+  var h = '';
 
-  h += '<div class="card"><div class="ctit">Aggiorna dati</div><div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
+  h += '<div class="card pro-sec" style="text-align:center">';
+  h += '<div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div>';
+  h += '<div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">🔥</div><div><div class="pro-ttl">Fabbisogno</div><div class="pro-sub">Il tuo motore giornaliero e il costo del tuo stile di vita</div></div></div>';
+  h += '<div class="pgrid"><div class="pi"><div class="pv">' + CU.fab.kc + '</div><div class="pl">kcal/gg</div></div><div class="pi"><div class="pv">' + CU.fab.bmr + '</div><div class="pl">BMR</div></div><div class="pi"><div class="pv">' + CU.fab.tef + '</div><div class="pl">TEF cibo</div></div></div>';
+  h += '<div class="pro-note">Tipo lavoro: <b style="color:#f2f2f2">' + lavLabel + '</b> (+' + CU.fab.bonusLav + ' kcal/gg)<br>TEF: <b style="color:#f2f2f2">~' + CU.fab.tef + ' kcal/gg</b> bruciate durante la digestione.</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">⚙️</div><div><div class="pro-ttl">Dati profilo</div><div class="pro-sub">Aggiorna peso, altezza, attività e obiettivo</div></div></div>';
+  h += '<div class="g2"><div><label class="lbl">Peso kg</label><input class="fi" id="ep-ps" type="number" value="' + CU.ps + '"></div><div><label class="lbl">Altezza cm</label><input class="fi" id="ep-al" type="number" value="' + CU.al + '"></div></div>';
   h += '<label class="lbl">Tipo di lavoro</label><select class="fi" id="ep-lav">';
   [['sedentario','Sedentario (ufficio)'],['piedi','In piedi (bar, negozio)'],['fisico','Lavoro fisico']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.lav === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Attivita fisica</label><select class="fi" id="ep-at">';
   [['1.2','Nessuna'],['1.375','Leggera'],['1.55','Moderata'],['1.725','Intensa'],['1.9','Molto intensa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (String(CU.at) === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
-  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
-  h += '<div class="card"><div class="ctit">Backup e export</div>';
+  h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">💾</div><div><div class="pro-ttl">Backup e export</div><div class="pro-sub">Salva i tuoi dati o portali fuori dall’app</div></div></div>';
   h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
-  h += '<button class="boutl" onclick="document.getElementById('backup-import').click()" style="margin-bottom:8px;border-color:var(--o);color:var(--o)">Importa backup JSON</button>';
+  h += "<button class=\"boutl\" onclick=\"document.getElementById('backup-import').click()\" style=\"margin-bottom:8px;border-color:var(--o);color:var(--o)\">Importa backup JSON</button>";
   h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
   h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
-  h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
-  h += '<button class="boutl" onclick="installApp()" style="border-color:var(--g);color:var(--g);margin-bottom:8px">Installa app</button>';
+  h += '<div class="pro-note">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div>';
+  h += '</div>';
+
+  h += '<div class="card pro-sec">';
+  h += '<div class="pro-head"><div class="pro-ic">⏱️</div><div><div class="pro-ttl">Sessione attiva</div><div class="pro-sub">Avviso se provi a chiudere con timer acceso</div></div></div>';
+  h += '<div class="timer-warn">Se il timer allenamento è attivo e provi a chiudere o ricaricare la pagina, il browser ti avviserà.</div>';
+  h += '</div>';
+
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1650,29 +1335,122 @@ function aggProfilo() {
 }
 
 
-function downloadFile(filename, content, type) {
-  var blob = new Blob([content], {type: type || 'text/plain;charset=utf-8'});
+// ============================================================
+// PROGRESSI
+// ============================================================
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce(function(a,b){ return a+b; }, 0) / arr.length;
+}
+function round1(v) { return Math.round(v * 10) / 10; }
+
+function drawMiniChart(id, vals, color) {
+  var c = document.getElementById(id);
+  if (!c || !c.getContext) return;
+  var ctx = c.getContext('2d');
+  var w = c.clientWidth || 320;
+  var h = parseInt(c.getAttribute('height') || '140', 10);
+  c.width = w; c.height = h;
+  ctx.clearRect(0,0,w,h);
+  if (!vals || !vals.length) {
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Nessun dato disponibile', 12, 24);
+    return;
+  }
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (min === max) { min -= 1; max += 1; }
+  var left = 18, right = 8, top = 10, bottom = 16;
+  var pw = w - left - right, ph = h - top - bottom;
+  ctx.strokeStyle = '#2c2c2c';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, top); ctx.lineTo(left, h - bottom); ctx.lineTo(w - right, h - bottom); ctx.stroke();
+  ctx.strokeStyle = color || '#c8f135';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.fillStyle = color || '#c8f135';
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function renderProgress() {
+  if (!CU) return;
+  var db = loadDB();
+  var weight7 = [], weight30 = [], kcal7 = [], kcal14 = [], prot7 = [], carb7 = [];
+  var today = new Date();
+  for (var i = 0; i < 30; i++) {
+    var dt = new Date(today); dt.setDate(today.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    if (i < 7) {
+      if (log.peso > 0) weight7.push(Number(log.peso));
+      kcal7.push(tot.k || 0);
+      prot7.push(tot.p || 0);
+      carb7.push(tot.c || 0);
+    }
+    if (log.peso > 0) weight30.push(Number(log.peso));
+    if (i < 14) kcal14.push(tot.k || 0);
+  }
+  var avg7 = weight7.length ? round1(avg(weight7)) : null;
+  var delta30 = weight30.length >= 2 ? round1(weight30[0] - weight30[weight30.length - 1]) : null;
+  var adh7 = kcal7.length ? Math.round(avg(kcal7) / Math.max(CU.fab.kc, 1) * 100) : null;
+  var wk7 = db.workouts.filter(function(w) {
+    if (w.uid !== CU.id) return false;
+    var d = new Date(w.dt);
+    var diff = (today - d) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff < 7;
+  }).length;
+  document.getElementById('pr-avg7').textContent = avg7 !== null ? avg7 + ' kg' : '-';
+  document.getElementById('pr-d30').textContent = delta30 !== null ? (delta30 > 0 ? '+' : '') + delta30 + ' kg' : '-';
+  document.getElementById('pr-adh7').textContent = adh7 !== null ? adh7 + '%' : '-';
+  document.getElementById('pr-wk7').textContent = wk7;
+  document.getElementById('pr-mp').textContent = Math.round(avg(prot7)) + 'g';
+  document.getElementById('pr-mc').textContent = Math.round(avg(carb7)) + 'g';
+  var insights = [];
+  if (adh7 !== null) {
+    if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
+    else if (adh7 >= 65) insights.push('Aderenza discreta, ma puoi essere più costante.');
+    else insights.push('Aderenza bassa: stai andando spesso fuori target.');
+  }
+  if (delta30 !== null) {
+    if (delta30 < -0.5) insights.push('Il peso è in calo negli ultimi 30 giorni.');
+    else if (delta30 > 0.5) insights.push('Il peso è in aumento negli ultimi 30 giorni.');
+    else insights.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
+  }
+  if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
+  else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
+  else insights.push('Buona costanza negli allenamenti questa settimana.');
+  document.getElementById('progress-insights').innerHTML = insights.length
+    ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('')
+    : '<div style="color:var(--mu)">Nessun insight disponibile.</div>';
+  drawMiniChart('progress-weight-chart', weight30.slice().reverse(), '#3ecf8e');
+  drawMiniChart('progress-cal-chart', kcal14.slice().reverse(), '#ff6b35');
+}
+
+// ============================================================
+// BACKUP E EXPORT
+// ============================================================
+function downloadFile(filename, content, mime) {
+  var blob = new Blob([content], {type: mime || 'text/plain;charset=utf-8'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  setTimeout(function() {
-    URL.revokeObjectURL(url);
-    a.remove();
-  }, 100);
-}
-
-function getUserLogsObject(uid) {
-  var db = loadDB();
-  var out = {};
-  Object.keys(db.logs || {}).forEach(function(k) {
-    if (k.indexOf(uid + '_') === 0) {
-      out[k.replace(uid + '_', '')] = db.logs[k];
-    }
-  });
-  return out;
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
 }
 
 function exportBackupJSON() {
@@ -1680,35 +1458,38 @@ function exportBackupJSON() {
   var db = loadDB();
   var payload = {
     exportedAt: new Date().toISOString(),
-    app: 'MyFitLife',
-    version: '5.5',
+    version: '1.0',
     user: CU,
-    logs: getUserLogsObject(CU.id),
-    workouts: (db.workouts || []).filter(function(w) { return w.uid === CU.id; })
+    logs: db.logs || {},
+    workouts: db.workouts || []
   };
   downloadFile('myfitlife-backup-' + dkey(new Date()) + '.json', JSON.stringify(payload, null, 2), 'application/json');
 }
 
 function importBackup(event) {
-  var file = event && event.target && event.target.files && event.target.files[0];
+  var file = event.target.files && event.target.files[0];
   if (!file) return;
   var reader = new FileReader();
   reader.onload = function() {
     try {
-      var data = JSON.parse(reader.result);
-      if (!data || !data.user || !data.user.id) throw new Error('Backup non valido');
+      var parsed = JSON.parse(reader.result);
+      if (!parsed || !parsed.user) throw new Error('File backup non valido');
       var db = loadDB();
-      var existing = db.users.findIndex(function(u) { return u.id === data.user.id || u.em === data.user.em; });
-      if (existing >= 0) db.users[existing] = data.user; else db.users.push(data.user);
-      Object.keys(data.logs || {}).forEach(function(date) {
-        db.logs[data.user.id + '_' + date] = data.logs[date];
-      });
-      var keep = (db.workouts || []).filter(function(w) { return w.uid !== data.user.id; });
-      db.workouts = keep.concat(data.workouts || []);
+      var u = parsed.user;
+      CU = u;
+      var idx = db.users.findIndex(function(x){ return x.id === u.id; });
+      if (idx >= 0) db.users[idx] = u; else db.users.push(u);
+      if (parsed.logs && typeof parsed.logs === 'object') {
+        Object.keys(parsed.logs).forEach(function(k){ db.logs[k] = parsed.logs[k]; });
+      }
+      if (Array.isArray(parsed.workouts)) {
+        db.workouts = parsed.workouts;
+      }
       saveDB(db);
-      CU = data.user;
+      if (u.id) {
+        localStorage.setItem('fl5_uid', u.id);
+      }
       entrApp();
-      renderHome();
       alert('Backup importato con successo.');
     } catch (err) {
       alert('Errore import backup: ' + err.message);
@@ -1723,15 +1504,14 @@ function importBackup(event) {
 function csvEscape(v) {
   var s = String(v == null ? '' : v);
   if (s.indexOf('"') >= 0) s = s.replace(/"/g, '""');
-  if (/[",
-;]/.test(s)) s = '"' + s + '"';
+  if (/[",\n]/.test(s)) s = '"' + s + '"';
   return s;
 }
 
 function exportDiaryCSV() {
   if (!CU) return;
-  var rows = [['data','peso','kcal_assunte','kcal_bruciate','proteine_g','carb_g','grassi_g','bilancio_vs_fabbisogno']];
-  for (var i = 0; i < 180; i++) {
+  var rows = [['data','peso','kcal_assunte','kcal_bruciate','proteine','carboidrati','grassi','bilancio_vs_fabbisogno']];
+  for (var i = 0; i < 90; i++) {
     var dt = new Date(); dt.setDate(dt.getDate() - i);
     var dk = dkey(dt);
     var log = getLog(CU.id, dk);
@@ -1741,69 +1521,36 @@ function exportDiaryCSV() {
     var bil = (tot.k - bru) - CU.fab.kc;
     rows.push([dk, log.peso || '', tot.k || 0, bru, tot.p || 0, tot.c || 0, tot.g || 0, bil]);
   }
-  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('
-');
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\n');
   downloadFile('myfitlife-diario-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
 
 function exportWorkoutCSV() {
   if (!CU) return;
   var db = loadDB();
-  var rows = [['data','scheda','durata_min','kcal','esercizi','serie_totali']];
-  (db.workouts || []).filter(function(w){ return w.uid === CU.id; }).forEach(function(w) {
-    var exNames = (w.ex || []).map(function(e){ return e.nm; }).join(' | ');
+  var rows = [['data','scheda','durata_sec','kcal','esercizi','serie_totali']];
+  db.workouts.filter(function(w){ return w.uid === CU.id; }).forEach(function(w){
+    var esercizi = (w.ex || []).map(function(e){ return e.nm; }).join(' | ');
     var serieTot = (w.ex || []).reduce(function(acc, e){ return acc + ((e.serie || []).length); }, 0);
-    rows.push([
-      w.dt || '',
-      w.sc || '',
-      w.dur ? Math.round((w.dur || 0) / 60) : 0,
-      w.kcal || 0,
-      exNames,
-      serieTot
-    ]);
+    rows.push([w.dt || '', w.sc || '', w.dur || 0, w.kcal || 0, esercizi, serieTot]);
   });
-  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('
-');
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\n');
   downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
+
+
+
+window.addEventListener('beforeunload', function (e) {
+  if (!tOn) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 // ============================================================
 // INIT
 // ============================================================
 renderQuick();
 ripristinaSessione();
-</script>
-<script>
-var deferredInstallPrompt = null;
-
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  localStorage.setItem('mfl_install_ready', '1');
-});
-
-async function installApp() {
-  if (!deferredInstallPrompt) {
-    alert('Su iPhone usa Condividi > Aggiungi alla schermata Home. Su Android/Chrome cerca il menu Installa app.');
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  try { await deferredInstallPrompt.userChoice; } catch(e) {}
-  deferredInstallPrompt = null;
-  localStorage.removeItem('mfl_install_ready');
-}
-
-window.addEventListener('appinstalled', function() {
-  localStorage.removeItem('mfl_install_ready');
-});
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./service-worker.js').catch(function(err) {
-      console.warn('SW non registrato', err);
-    });
-  });
-}
 </script>
 </body>
 </html>
