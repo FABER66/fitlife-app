@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MyFitLife</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e0e0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MyFitLife">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden}
@@ -458,36 +464,7 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
   </div>
 </div>
 
-
-<div class="mov" id="mod-guida-yt">
-  <div class="mod">
-    <div class="mhnd"></div>
-    <div class="mtit" id="gyt-tit">Guida esercizio</div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Macchina / attrezzo</div>
-      <div id="gyt-macchina" style="font-size:14px;font-weight:700">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Come si fa</div>
-      <div id="gyt-come" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Muscoli coinvolti</div>
-      <div id="gyt-muscoli" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <div class="card" style="margin-bottom:10px">
-      <div class="ctit">Errori da evitare</div>
-      <div id="gyt-errori" style="font-size:13px;line-height:1.7;color:#f2f2f2">-</div>
-    </div>
-
-    <button class="bp" id="gyt-link" onclick="apriGuidaYoutube()" style="margin-top:0;margin-bottom:8px">Guarda su YouTube</button>
-    <button class="bsec" onclick="chiudiGuidaYoutube()">Chiudi</button>
-  </div>
-</div>
+<input type="file" id="backup-import" accept="application/json" style="display:none" onchange="importBackup(event)">
 
 <script>
 // ============================================================
@@ -1254,6 +1231,21 @@ function renderWorkout() {
 
 function switchS(id) { CU.actS = id; saveUser(); renderWorkout(); }
 
+function getExerciseYoutube(name) {
+  var n = (name || '').toLowerCase();
+  if (n.indexOf('chest') >= 0) return 'https://www.youtube.com/results?search_query=chest+press+machine+exercise';
+  if (n.indexOf('lat') >= 0 || n.indexOf('pulldown') >= 0) return 'https://www.youtube.com/results?search_query=lat+pulldown+machine+exercise';
+  if (n.indexOf('low row') >= 0 || n.indexOf('row') >= 0) return 'https://www.youtube.com/results?search_query=low+row+machine+exercise';
+  if (n.indexOf('leg extension') >= 0 || n == 'extension') return 'https://www.youtube.com/results?search_query=leg+extension+machine+exercise';
+  if (n.indexOf('leg curl') >= 0 || n.indexOf('curl') >= 0) return 'https://www.youtube.com/results?search_query=seated+leg+curl+machine+exercise';
+  if (n.indexOf('shoulder') >= 0 && n.indexOf('press') >= 0) return 'https://www.youtube.com/results?search_query=shoulder+press+machine+exercise';
+  if (n.indexOf('abdominal') >= 0) return 'https://www.youtube.com/results?search_query=abdominal+machine+exercise';
+  if (n.indexOf('treadmill') >= 0) return 'https://www.youtube.com/results?search_query=treadmill+how+to+use';
+  if (n.indexOf('bike') >= 0 || n.indexOf('cyclette') >= 0) return 'https://www.youtube.com/results?search_query=upright+bike+how+to+use';
+  if (n.indexOf('ergometer') >= 0) return 'https://www.youtube.com/results?search_query=arm+ergometer+exercise';
+  return '';
+}
+
 function renderEx() {
   var sc = getScheda(), h = '';
   if (!sc) { document.getElementById('exlist').innerHTML = ''; return; }
@@ -1264,8 +1256,10 @@ function renderEx() {
     var tipoLabel = isTempo
       ? '<span class="ex-tipo t">&#9201; TEMPO</span>'
       : '<span class="ex-tipo r">&#128170; REPS</span>';
-    var guida = getExerciseGuideByName(ex.nm);
-    var guidaBtn = guida ? ' <button style="margin-left:6px;padding:2px 8px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;cursor:pointer" onclick="event.stopPropagation();apriGuidaEsercizio(' + JSON.stringify(ex.nm) + ')">Guida</button>' : '';
+    var yt = getExerciseYoutube(ex.nm);
+    var guidaBtn = yt
+      ? ' <a href="' + yt + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="display:inline-block;margin-left:6px;padding:2px 7px;border-radius:10px;border:1px solid var(--acc);background:none;color:var(--acc);font-size:10px;font-weight:700;text-decoration:none">YouTube</a>'
+      : '';
     h += '<div class="exc"><div class="exh" onclick="togEx(\'' + ex.id + '\')"><div><div class="exn">' + ex.nm + tipoLabel + guidaBtn + '</div><div class="exm">' + dn + '/' + tot + ' serie' + (ex.note ? ' - ' + ex.note : '') + '</div><div class="pb" style="margin-top:5px"><div class="pf" style="width:' + (tot ? dn/tot*100 : 0) + '%"></div></div></div><div style="display:flex;align-items:center;gap:5px"><button class="dex" onclick="event.stopPropagation();delEx(\'' + ex.id + '\')">x</button><svg class="chev' + (openEx[ex.id] ? ' op' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="6 9 12 15 18 9"/></svg></div></div>';
     h += '<div class="exb' + (openEx[ex.id] ? ' op' : '') + '">';
     if (isTempo) {
@@ -1617,6 +1611,13 @@ function renderProfilo() {
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
+  h += '<div class="card"><div class="ctit">Backup e export</div>';
+  h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
+  h += '<button class="boutl" onclick="document.getElementById('backup-import').click()" style="margin-bottom:8px;border-color:var(--o);color:var(--o)">Importa backup JSON</button>';
+  h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
+  h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV sono utili per analisi esterne o archivio.</div></div>';
+  h += '<button class="boutl" onclick="installApp()" style="border-color:var(--g);color:var(--g);margin-bottom:8px">Installa app</button>';
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1642,153 +1643,160 @@ function aggProfilo() {
 }
 
 
-// ============================================================
-// GUIDA ESERCIZI YOUTUBE
-// ============================================================
-var CURRENT_GUIDE_URL = '';
+function downloadFile(filename, content, type) {
+  var blob = new Blob([content], {type: type || 'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 100);
+}
 
-var EXERCISE_GUIDES = [
-  {
-    key: 'chest_press',
-    aliases: ['chest press', 'chest'],
-    title: 'Chest Press',
-    machine: 'Chest Press Machine',
-    how: 'Regola il sedile così le maniglie siano circa all\'altezza del petto. Schiena ben appoggiata, spingi in avanti in modo controllato e torna lentamente senza perdere il controllo.',
-    muscles: 'Pettorali, tricipiti, deltoide anteriore.',
-    errors: 'Spalle sollevate, slancio eccessivo, ritorno troppo veloce, gomiti bloccati con forza a fine spinta.',
-    youtube: 'https://www.youtube.com/results?search_query=chest+press+machine+esecuzione'
-  },
-  {
-    key: 'lat_pulldown',
-    aliases: ['lat pulldown', 'lat machine', 'lat'],
-    title: 'Lat Pulldown',
-    machine: 'Lat Machine / Lat Pulldown',
-    how: 'Afferra la barra in modo stabile, petto aperto, tira verso la parte alta del petto portando i gomiti in basso e indietro. Risali lentamente senza perdere assetto.',
-    muscles: 'Gran dorsale, bicipiti, romboidi.',
-    errors: 'Tirare dietro la nuca, dondolare il busto, chiudere troppo le spalle, rilasciare la barra troppo in fretta.',
-    youtube: 'https://www.youtube.com/results?search_query=lat+pulldown+machine+esecuzione'
-  },
-  {
-    key: 'low_row',
-    aliases: ['low row', 'row', 'rematore'],
-    title: 'Low Row',
-    machine: 'Low Row Machine',
-    how: 'Petto aperto, schiena stabile, tira le maniglie verso il busto portando i gomiti indietro. Ritorna lentamente mantenendo controllo e scapole attive.',
-    muscles: 'Dorsali, romboidi, trapezio medio, bicipiti.',
-    errors: 'Curvare la schiena, tirare solo con le braccia, spalle alte, ritorno incontrollato.',
-    youtube: 'https://www.youtube.com/results?search_query=low+row+machine+esecuzione'
-  },
-  {
-    key: 'leg_extension',
-    aliases: ['leg extension', 'extension'],
-    title: 'Leg Extension',
-    machine: 'Leg Extension Machine',
-    how: 'Regola il rullo sopra la caviglia, schiena aderente allo schienale, estendi le gambe in modo controllato e torna lentamente senza lasciar cadere il peso.',
-    muscles: 'Quadricipiti.',
-    errors: 'Slancio, ritorno troppo rapido, seduta regolata male, ginocchia non allineate.',
-    youtube: 'https://www.youtube.com/results?search_query=leg+extension+machine+esecuzione'
-  },
-  {
-    key: 'seated_leg_curl',
-    aliases: ['seated leg curl', 'leg curl', 'curl'],
-    title: 'Seated Leg Curl',
-    machine: 'Seated Leg Curl Machine',
-    how: 'Sistema il rullo dietro le caviglie, tieni il busto fermo e fletti le ginocchia portando il rullo verso il basso in modo controllato. Torna lentamente.',
-    muscles: 'Femorali.',
-    errors: 'Movimento a scatto, bacino che si sposta, ritorno incontrollato, assetto macchina sbagliato.',
-    youtube: 'https://www.youtube.com/results?search_query=seated+leg+curl+machine+esecuzione'
-  },
-  {
-    key: 'shoulder_press',
-    aliases: ['shoulder press', 'press machine', 'shoulder'],
-    title: 'Shoulder Press Machine',
-    machine: 'Shoulder Press Machine',
-    how: 'Seduta regolata con maniglie all\'altezza spalle, addome attivo, spingi in alto senza perdere assetto e torna lentamente.',
-    muscles: 'Deltoidi, tricipiti.',
-    errors: 'Inarcare troppo la schiena, spalle sollevate, discesa troppo rapida, carico eccessivo.',
-    youtube: 'https://www.youtube.com/results?search_query=shoulder+press+machine+esecuzione'
-  },
-  {
-    key: 'abdominal_machine',
-    aliases: ['abdominal machine', 'abdominal', 'abs machine'],
-    title: 'Abdominal Machine',
-    machine: 'Abdominal Machine',
-    how: 'Imposta il sedile correttamente, chiudi il busto contraendo l\'addome senza strappare il movimento. Torna lentamente alla posizione iniziale.',
-    muscles: 'Retto addominale, obliqui.',
-    errors: 'Tirare con collo e spalle, movimento a scatto, rilascio troppo veloce.',
-    youtube: 'https://www.youtube.com/results?search_query=abdominal+machine+esecuzione'
-  },
-  {
-    key: 'treadmill',
-    aliases: ['treadmill', 'tapis roulant'],
-    title: 'Treadmill',
-    machine: 'Treadmill',
-    how: 'Cammina o corri con postura stabile, sguardo avanti, appoggio regolare del piede e braccia naturali.',
-    muscles: 'Gambe e sistema cardiovascolare.',
-    errors: 'Guardare in basso, aggrapparsi sempre ai corrimani, falcata rigida, velocità troppo alta senza controllo.',
-    youtube: 'https://www.youtube.com/results?search_query=treadmill+camminata+corsa+corretta'
-  },
-  {
-    key: 'upright_bike',
-    aliases: ['upright bike', 'bike', 'cyclette'],
-    title: 'Upright Bike',
-    machine: 'Upright Bike / Cyclette',
-    how: 'Regola la sella, pedala con ritmo costante, busto stabile e spalle rilassate.',
-    muscles: 'Quadricipiti, glutei, polpacci, sistema cardiovascolare.',
-    errors: 'Sella troppo alta o troppo bassa, spalle contratte, pedalata discontinua.',
-    youtube: 'https://www.youtube.com/results?search_query=cyclette+posizione+corretta'
-  },
-  {
-    key: 'arm_ergometer',
-    aliases: ['arm ergometer', 'ergometer'],
-    title: 'Arm Ergometer',
-    machine: 'Arm Ergometer',
-    how: 'Regola altezza e distanza, mantieni busto fermo e pedala con le braccia in modo fluido e continuo.',
-    muscles: 'Spalle, braccia, parte alta del tronco, sistema cardiovascolare.',
-    errors: 'Spalle alte, movimenti a strappo, assetto troppo lontano o troppo vicino.',
-    youtube: 'https://www.youtube.com/results?search_query=arm+ergometer+esecuzione'
-  }
-];
-
-function getExerciseGuideByName(name) {
-  var n = String(name || '').toLowerCase().trim();
-  for (var i = 0; i < EXERCISE_GUIDES.length; i++) {
-    var g = EXERCISE_GUIDES[i];
-    for (var j = 0; j < g.aliases.length; j++) {
-      if (n.indexOf(g.aliases[j]) >= 0) return g;
+function getUserLogsObject(uid) {
+  var db = loadDB();
+  var out = {};
+  Object.keys(db.logs || {}).forEach(function(k) {
+    if (k.indexOf(uid + '_') === 0) {
+      out[k.replace(uid + '_', '')] = db.logs[k];
     }
+  });
+  return out;
+}
+
+function exportBackupJSON() {
+  if (!CU) return;
+  var db = loadDB();
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    app: 'MyFitLife',
+    version: '5.5',
+    user: CU,
+    logs: getUserLogsObject(CU.id),
+    workouts: (db.workouts || []).filter(function(w) { return w.uid === CU.id; })
+  };
+  downloadFile('myfitlife-backup-' + dkey(new Date()) + '.json', JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function importBackup(event) {
+  var file = event && event.target && event.target.files && event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var data = JSON.parse(reader.result);
+      if (!data || !data.user || !data.user.id) throw new Error('Backup non valido');
+      var db = loadDB();
+      var existing = db.users.findIndex(function(u) { return u.id === data.user.id || u.em === data.user.em; });
+      if (existing >= 0) db.users[existing] = data.user; else db.users.push(data.user);
+      Object.keys(data.logs || {}).forEach(function(date) {
+        db.logs[data.user.id + '_' + date] = data.logs[date];
+      });
+      var keep = (db.workouts || []).filter(function(w) { return w.uid !== data.user.id; });
+      db.workouts = keep.concat(data.workouts || []);
+      saveDB(db);
+      CU = data.user;
+      entrApp();
+      renderHome();
+      alert('Backup importato con successo.');
+    } catch (err) {
+      alert('Errore import backup: ' + err.message);
+    } finally {
+      var inp = document.getElementById('backup-import');
+      if (inp) inp.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function csvEscape(v) {
+  var s = String(v == null ? '' : v);
+  if (s.indexOf('"') >= 0) s = s.replace(/"/g, '""');
+  if (/[",
+;]/.test(s)) s = '"' + s + '"';
+  return s;
+}
+
+function exportDiaryCSV() {
+  if (!CU) return;
+  var rows = [['data','peso','kcal_assunte','kcal_bruciate','proteine_g','carb_g','grassi_g','bilancio_vs_fabbisogno']];
+  for (var i = 0; i < 180; i++) {
+    var dt = new Date(); dt.setDate(dt.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    var bru = log.kcalBruciate || 0;
+    if (!tot.k && !log.peso && !bru) continue;
+    var bil = (tot.k - bru) - CU.fab.kc;
+    rows.push([dk, log.peso || '', tot.k || 0, bru, tot.p || 0, tot.c || 0, tot.g || 0, bil]);
   }
-  return null;
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('
+');
+  downloadFile('myfitlife-diario-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
 
-function apriGuidaEsercizio(name) {
-  var g = getExerciseGuideByName(name);
-  if (!g) return;
-  document.getElementById('gyt-tit').textContent = g.title;
-  document.getElementById('gyt-macchina').textContent = g.machine;
-  document.getElementById('gyt-come').textContent = g.how;
-  document.getElementById('gyt-muscoli').textContent = g.muscles;
-  document.getElementById('gyt-errori').textContent = g.errors;
-  CURRENT_GUIDE_URL = g.youtube;
-  document.getElementById('mod-guida-yt').className = 'mov on';
+function exportWorkoutCSV() {
+  if (!CU) return;
+  var db = loadDB();
+  var rows = [['data','scheda','durata_min','kcal','esercizi','serie_totali']];
+  (db.workouts || []).filter(function(w){ return w.uid === CU.id; }).forEach(function(w) {
+    var exNames = (w.ex || []).map(function(e){ return e.nm; }).join(' | ');
+    var serieTot = (w.ex || []).reduce(function(acc, e){ return acc + ((e.serie || []).length); }, 0);
+    rows.push([
+      w.dt || '',
+      w.sc || '',
+      w.dur ? Math.round((w.dur || 0) / 60) : 0,
+      w.kcal || 0,
+      exNames,
+      serieTot
+    ]);
+  });
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('
+');
+  downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
-
-function chiudiGuidaYoutube() {
-  var el = document.getElementById('mod-guida-yt');
-  if (el) el.className = 'mov';
-}
-
-function apriGuidaYoutube() {
-  if (!CURRENT_GUIDE_URL) return;
-  window.open(CURRENT_GUIDE_URL, '_blank');
-}
-
 
 // ============================================================
 // INIT
 // ============================================================
 renderQuick();
 ripristinaSessione();
+</script>
+<script>
+var deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  localStorage.setItem('mfl_install_ready', '1');
+});
+
+async function installApp() {
+  if (!deferredInstallPrompt) {
+    alert('Su iPhone usa Condividi > Aggiungi alla schermata Home. Su Android/Chrome cerca il menu Installa app.');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  try { await deferredInstallPrompt.userChoice; } catch(e) {}
+  deferredInstallPrompt = null;
+  localStorage.removeItem('mfl_install_ready');
+}
+
+window.addEventListener('appinstalled', function() {
+  localStorage.removeItem('mfl_install_ready');
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(err) {
+      console.warn('SW non registrato', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
