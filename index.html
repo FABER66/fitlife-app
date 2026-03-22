@@ -458,6 +458,8 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
   </div>
 </div>
 
+<input type="file" id="backup-import" accept="application/json" style="display:none" onchange="importBackup(event)">
+
 <script>
 // ============================================================
 // PROXY AI - usa Vercel server, fallback diretto
@@ -1584,6 +1586,12 @@ function renderProfilo() {
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
+  h += '<div class="card"><div class="ctit">Backup e export</div>';
+  h += '<button class="boutl" onclick="exportBackupJSON()" style="margin-bottom:8px">Esporta backup JSON</button>';
+  h += "<button class=\"boutl\" onclick=\"document.getElementById('backup-import').click()\" style=\"margin-bottom:8px;border-color:var(--o);color:var(--o)\">Importa backup JSON</button>";
+  h += '<button class="boutl" onclick="exportDiaryCSV()" style="margin-bottom:8px;border-color:var(--g);color:var(--g)">Esporta CSV diario</button>';
+  h += '<button class="boutl" onclick="exportWorkoutCSV()">Esporta CSV workout</button>';
+  h += '<div style="font-size:12px;color:var(--mu);margin-top:8px;line-height:1.6">Il backup JSON include profilo, log e workout. I CSV servono per archivio o analisi esterne.</div></div>';
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1607,6 +1615,124 @@ function aggProfilo() {
   alert('Aggiornato! Fabbisogno: ' + CU.fab.kc + ' kcal/gg');
   renderProfilo();
 }
+
+function downloadFile(filename, content, type) {
+  var blob = new Blob([content], {type: type || 'text/plain;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() {
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 100);
+}
+
+function getUserLogsObject(uid) {
+  var db = loadDB();
+  var out = {};
+  Object.keys(db.logs || {}).forEach(function(k) {
+    if (k.indexOf(uid + '_') === 0) {
+      out[k.replace(uid + '_', '')] = db.logs[k];
+    }
+  });
+  return out;
+}
+
+function exportBackupJSON() {
+  if (!CU) return;
+  var db = loadDB();
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    app: 'MyFitLife',
+    version: '5.5-safe',
+    user: CU,
+    logs: getUserLogsObject(CU.id),
+    workouts: (db.workouts || []).filter(function(w) { return w.uid === CU.id; })
+  };
+  downloadFile('myfitlife-backup-' + dkey(new Date()) + '.json', JSON.stringify(payload, null, 2), 'application/json');
+}
+
+function importBackup(event) {
+  var file = event && event.target && event.target.files && event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var data = JSON.parse(reader.result);
+      if (!data || !data.user || !data.user.id) throw new Error('Backup non valido');
+      var db = loadDB();
+      var existing = db.users.findIndex(function(u) { return u.id === data.user.id || u.em === data.user.em; });
+      if (existing >= 0) db.users[existing] = data.user; else db.users.push(data.user);
+      Object.keys(data.logs || {}).forEach(function(date) {
+        db.logs[data.user.id + '_' + date] = data.logs[date];
+      });
+      var keep = (db.workouts || []).filter(function(w) { return w.uid !== data.user.id; });
+      db.workouts = keep.concat(data.workouts || []);
+      saveDB(db);
+      CU = data.user;
+      entrApp();
+      renderHome();
+      alert('Backup importato con successo.');
+    } catch (err) {
+      alert('Errore import backup: ' + err.message);
+    } finally {
+      var inp = document.getElementById('backup-import');
+      if (inp) inp.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function csvEscape(v) {
+  var s = String(v == null ? '' : v);
+  if (s.indexOf('"') >= 0) s = s.replace(/"/g, '""');
+  if (/[",;\n]/.test(s)) s = '"' + s + '"';
+  return s;
+}
+
+function exportDiaryCSV() {
+  if (!CU) return;
+  var rows = [['data','peso','kcal_assunte','kcal_bruciate','proteine_g','carb_g','grassi_g','bilancio_vs_fabbisogno']];
+  for (var i = 0; i < 180; i++) {
+    var dt = new Date(); dt.setDate(dt.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    var bru = log.kcalBruciate || 0;
+    if (!tot.k && !log.peso && !bru) continue;
+    var bil = (tot.k - bru) - CU.fab.kc;
+    rows.push([dk, log.peso || '', tot.k || 0, bru, tot.p || 0, tot.c || 0, tot.g || 0, bil]);
+  }
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('\n');
+  downloadFile('myfitlife-diario-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
+function exportWorkoutCSV() {
+  if (!CU) return;
+  var db = loadDB();
+  var rows = [['data','scheda','durata_min','kcal','esercizi','serie_totali']];
+  (db.workouts || [])
+    .filter(function(w) { return w.uid === CU.id; })
+    .sort(function(a,b) { return new Date(b.dt) - new Date(a.dt); })
+    .forEach(function(w) {
+      var esercizi = (w.ex || []).map(function(e){ return e.nm; }).join(', ');
+      var serieTot = (w.ex || []).reduce(function(acc, e) { return acc + ((e.serie || []).length || 0); }, 0);
+      rows.push([
+        (w.dt || '').split('T')[0],
+        w.sc || '',
+        w.dur ? Math.round((w.dur || 0) / 60) : 0,
+        w.kcal || 0,
+        esercizi,
+        serieTot
+      ]);
+    });
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(';'); }).join('\n');
+  downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
+}
+
 
 // ============================================================
 // INIT
