@@ -209,6 +209,14 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
       </select>
       <label class="lbl">Peso obiettivo kg</label>
       <input class="fi" id="r-po" type="number" placeholder="es. 75">
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;margin-top:4px">
+        <input type="checkbox" id="r-marketing" style="accent-color:var(--acc);width:16px;height:16px;margin-top:2px;flex-shrink:0">
+        <label for="r-marketing" style="font-size:12px;color:var(--mu);line-height:1.5;cursor:pointer">Accetto di ricevere comunicazioni su aggiornamenti, offerte e novita di MyFitLife via email. Puoi disiscriverti in qualsiasi momento.</label>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;margin-bottom:4px">
+        <input type="checkbox" id="r-privacy" style="accent-color:var(--acc);width:16px;height:16px;margin-top:2px;flex-shrink:0">
+        <label for="r-privacy" style="font-size:12px;color:var(--mu);line-height:1.5;cursor:pointer">Ho letto e accetto la <span style="color:var(--acc);text-decoration:underline">Privacy Policy</span> e i <span style="color:var(--acc);text-decoration:underline">Termini di servizio</span>. *</label>
+      </div>
       <button class="bp" onclick="doRegistra()">Crea profilo</button>
     </div>
   </div>
@@ -588,6 +596,8 @@ async function doRegistra() {
   var ob = document.getElementById('r-ob').value || 'mantenere';
   var lav = document.getElementById('r-lav').value || 'sedentario';
   var po = parseFloat(document.getElementById('r-po').value) || 0;
+  var privacy = document.getElementById('r-privacy');
+  var marketing = document.getElementById('r-marketing');
   if (!nm) { showErr('Inserisci il nome.'); return; }
   if (!cg) { showErr('Inserisci il cognome.'); return; }
   if (!em || em.indexOf('@') < 1) { showErr('Email non valida.'); return; }
@@ -595,13 +605,15 @@ async function doRegistra() {
   if (et < 10 || et > 99) { showErr('Eta non valida.'); return; }
   if (ps < 20 || ps > 300) { showErr('Peso non valido.'); return; }
   if (al < 100 || al > 250) { showErr('Altezza non valida.'); return; }
+  if (!privacy || !privacy.checked) { showErr('Devi accettare la Privacy Policy per continuare.'); return; }
+  var consensoMarketing = marketing && marketing.checked ? true : false;
   var fab = calcFab(sx, ps, al, et, at, ob, lav);
   var schede = [{id:'A',nm:'Scheda A',ex:[]},{id:'B',nm:'Scheda B',ex:[]}];
   showErr('Creo il profilo...');
   // Registra su Supabase
   var res = await dbCall('signup', {
     email: em, password: pw,
-    profile: {nm:nm, cg:cg, et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, act_s:'A'}
+    profile: {nm:nm, cg:cg, et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, act_s:'A', marketing:consensoMarketing}
   });
   if (res && res.userId) {
     // Login automatico dopo registrazione
