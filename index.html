@@ -143,14 +143,6 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
-
-.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
-.pi{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:12px}
-.pv{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--acc);line-height:1.1}
-.pl{font-size:11px;color:var(--mu);margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
-.insight-item{padding:10px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;font-size:13px;line-height:1.35}
-#pg-progressi canvas{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:12px;margin-top:8px}
-
 </style>
 </head>
 <body>
@@ -348,27 +340,21 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
         <div class="pi"><div class="pv" id="pr-d30">-</div><div class="pl">Delta 30g</div></div>
         <div class="pi"><div class="pv" id="pr-adh7">-</div><div class="pl">Aderenza 7g</div></div>
         <div class="pi"><div class="pv" id="pr-wk7">-</div><div class="pl">Workout sett.</div></div>
+        <div class="pi"><div class="pv" id="pr-mp">0g</div><div class="pl">Proteine</div></div>
+        <div class="pi"><div class="pv" id="pr-mc">0g</div><div class="pl">Carb</div></div>
       </div>
     </div>
     <div class="card">
       <div class="ctit">Insight</div>
-      <div id="progress-insights"></div>
+      <div id="progress-insights" style="font-size:13px;color:var(--mu);line-height:1.6"></div>
     </div>
     <div class="card">
       <div class="ctit">Peso ultimi 30 giorni</div>
-      <canvas id="progress-weight-chart" height="150"></canvas>
+      <canvas id="progress-weight-chart" height="140" style="width:100%;display:block"></canvas>
     </div>
     <div class="card">
       <div class="ctit">Calorie ultimi 14 giorni</div>
-      <canvas id="progress-cal-chart" height="150"></canvas>
-    </div>
-    <div class="card">
-      <div class="ctit">Macro medie settimana</div>
-      <div class="mrow">
-        <div class="mp"><div class="mv" id="pr-mp" style="color:#3ecf8e">0g</div><div class="ml">Proteine</div></div>
-        <div class="mp"><div class="mv" id="pr-mc" style="color:#ff6b35">0g</div><div class="ml">Carb</div></div>
-        <div class="mp"><div class="mv" id="pr-mg" style="color:#c8f135">0g</div><div class="ml">Grassi</div></div>
-      </div>
+      <canvas id="progress-cal-chart" height="140" style="width:100%;display:block"></canvas>
     </div>
   </div>
 
@@ -382,7 +368,7 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
     <button class="nb" onclick="mostraPg('nutri')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/></svg>Nutri</button>
     <button class="nb" onclick="mostraPg('workout')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h16"/><circle cx="3" cy="12" r="1"/><circle cx="21" cy="12" r="1"/></svg>Workout</button>
     <button class="nb" onclick="mostraPg('diario')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Diario</button>
-    <button class="nb" onclick="mostraPg('progressi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19h16"/><path d="M7 16l3-3 3 2 4-5"/><circle cx="7" cy="16" r="1"/><circle cx="10" cy="13" r="1"/><circle cx="13" cy="15" r="1"/><circle cx="17" cy="10" r="1"/></svg>Progressi</button>
+    <button class="nb" onclick="mostraPg('progressi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 9 9 13 13 20 6"></polyline><polyline points="20 12 20 6 14 6"></polyline></svg>Progressi</button>
     <button class="nb" onclick="mostraPg('profilo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profilo</button>
   </nav>
 </div>
@@ -677,6 +663,110 @@ ripristinaSessione().then(function(ok) {
 });
 }
 
+
+// ============================================================
+// PROGRESSI
+// ============================================================
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce(function(a,b){ return a+b; }, 0) / arr.length;
+}
+function round1(v) { return Math.round(v * 10) / 10; }
+
+function drawMiniChart(id, vals, color) {
+  var c = document.getElementById(id);
+  if (!c || !c.getContext) return;
+  var ctx = c.getContext('2d');
+  var w = c.clientWidth || 320;
+  var h = parseInt(c.getAttribute('height') || '140', 10);
+  c.width = w; c.height = h;
+  ctx.clearRect(0,0,w,h);
+  if (!vals || !vals.length) {
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Nessun dato disponibile', 12, 24);
+    return;
+  }
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (min === max) { min -= 1; max += 1; }
+  var left = 18, right = 8, top = 10, bottom = 16;
+  var pw = w - left - right, ph = h - top - bottom;
+  ctx.strokeStyle = '#2c2c2c';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(left, top); ctx.lineTo(left, h - bottom); ctx.lineTo(w - right, h - bottom); ctx.stroke();
+  ctx.strokeStyle = color || '#c8f135';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.fillStyle = color || '#c8f135';
+  vals.forEach(function(v, i) {
+    var x = left + (pw * i / Math.max(vals.length - 1, 1));
+    var y = top + ph - ((v - min) / (max - min)) * ph;
+    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function renderProgress() {
+  if (!CU) return;
+  var db = loadDB();
+  var weight7 = [], weight30 = [], kcal7 = [], kcal14 = [], prot7 = [], carb7 = [];
+  var today = new Date();
+  for (var i = 0; i < 30; i++) {
+    var dt = new Date(today); dt.setDate(today.getDate() - i);
+    var dk = dkey(dt);
+    var log = getLog(CU.id, dk);
+    var tot = getTot(log);
+    if (i < 7) {
+      if (log.peso > 0) weight7.push(Number(log.peso));
+      kcal7.push(tot.k || 0);
+      prot7.push(tot.p || 0);
+      carb7.push(tot.c || 0);
+    }
+    if (log.peso > 0) weight30.push(Number(log.peso));
+    if (i < 14) kcal14.push(tot.k || 0);
+  }
+  var avg7 = weight7.length ? round1(avg(weight7)) : null;
+  var delta30 = weight30.length >= 2 ? round1(weight30[0] - weight30[weight30.length - 1]) : null;
+  var adh7 = kcal7.length ? Math.round(avg(kcal7) / Math.max(CU.fab.kc, 1) * 100) : null;
+  var wk7 = db.workouts.filter(function(w) {
+    if (w.uid !== CU.id) return false;
+    var d = new Date(w.dt);
+    var diff = (today - d) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff < 7;
+  }).length;
+  document.getElementById('pr-avg7').textContent = avg7 !== null ? avg7 + ' kg' : '-';
+  document.getElementById('pr-d30').textContent = delta30 !== null ? (delta30 > 0 ? '+' : '') + delta30 + ' kg' : '-';
+  document.getElementById('pr-adh7').textContent = adh7 !== null ? adh7 + '%' : '-';
+  document.getElementById('pr-wk7').textContent = wk7;
+  document.getElementById('pr-mp').textContent = Math.round(avg(prot7)) + 'g';
+  document.getElementById('pr-mc').textContent = Math.round(avg(carb7)) + 'g';
+  var insights = [];
+  if (adh7 !== null) {
+    if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
+    else if (adh7 >= 65) insights.push('Aderenza discreta, ma puoi essere più costante.');
+    else insights.push('Aderenza bassa: stai andando spesso fuori target.');
+  }
+  if (delta30 !== null) {
+    if (delta30 < -0.5) insights.push('Il peso è in calo negli ultimi 30 giorni.');
+    else if (delta30 > 0.5) insights.push('Il peso è in aumento negli ultimi 30 giorni.');
+    else insights.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
+  }
+  if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
+  else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
+  else insights.push('Buona costanza negli allenamenti questa settimana.');
+  document.getElementById('progress-insights').innerHTML = insights.length
+    ? insights.map(function(x){ return '<div style="padding:5px 0;border-bottom:1px solid var(--bd)">' + x + '</div>'; }).join('')
+    : '<div style="color:var(--mu)">Nessun insight disponibile.</div>';
+  drawMiniChart('progress-weight-chart', weight30.slice().reverse(), '#3ecf8e');
+  drawMiniChart('progress-cal-chart', kcal14.slice().reverse(), '#ff6b35');
+}
+
 // ============================================================
 // NAVIGAZIONE
 // ============================================================
@@ -692,8 +782,8 @@ function mostraPg(p) {
   if (p === 'nutri') renderNutri();
   if (p === 'workout') renderWorkout();
   if (p === 'diario') renderDiario();
-  if (p === 'profilo') renderProfilo();
   if (p === 'progressi') renderProgress();
+  if (p === 'profilo') renderProfilo();
 }
 
 // ============================================================
@@ -1309,158 +1399,6 @@ function aggProfilo() {
   saveUser();
   alert('Aggiornato! Fabbisogno: ' + CU.fab.kc + ' kcal/gg');
   renderProfilo();
-}
-
-
-
-// ============================================================
-// PROGRESSI
-// ============================================================
-function prSet(id, val) {
-  var el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function prRound(v) { return Math.round(v * 10) / 10; }
-function prDaysAgo(n) {
-  var d = new Date();
-  d.setDate(d.getDate() - n);
-  return dkey(d);
-}
-function prSeries(days) {
-  var rows = [];
-  for (var i = days - 1; i >= 0; i--) {
-    var dt = prDaysAgo(i);
-    var log = getLog(CU.id, dt);
-    var tot = getTot(log);
-    rows.push({ date: dt, kcal: tot.k || 0, p: tot.p || 0, c: tot.c || 0, g: tot.g || 0, peso: log.peso || 0 });
-  }
-  return rows;
-}
-function prWeightPoints(days) {
-  return prSeries(days).filter(function(x){ return x.peso && x.peso > 0; }).map(function(x){ return {label:x.date.slice(5), value:x.peso}; });
-}
-function prCalPoints(days) {
-  return prSeries(days).map(function(x){ return {label:x.date.slice(5), value:x.kcal || 0}; });
-}
-function prAvgWeight(days) {
-  var arr = prSeries(days).filter(function(x){ return x.peso && x.peso > 0; }).map(function(x){ return x.peso; });
-  if (!arr.length) return null;
-  return arr.reduce(function(a,b){ return a+b; },0) / arr.length;
-}
-function prDeltaWeight(days) {
-  var arr = prSeries(days).filter(function(x){ return x.peso && x.peso > 0; });
-  if (arr.length < 2) return null;
-  return arr[arr.length - 1].peso - arr[0].peso;
-}
-function prAdherence(days) {
-  var tg = (CU && CU.fab && CU.fab.kc) ? CU.fab.kc : 0;
-  if (!tg) return null;
-  var arr = prSeries(days);
-  if (!arr.length) return null;
-  var sum = 0;
-  arr.forEach(function(x){
-    var diff = Math.abs((x.kcal || 0) - tg);
-    var score = Math.max(0, 100 - (diff / tg * 100));
-    sum += score;
-  });
-  return sum / arr.length;
-}
-function prWeeklyMacros() {
-  var arr = prSeries(7);
-  if (!arr.length) return {p:0,c:0,g:0};
-  var t = arr.reduce(function(acc,x){ acc.p += x.p||0; acc.c += x.c||0; acc.g += x.g||0; return acc; }, {p:0,c:0,g:0});
-  return { p: t.p / arr.length, c: t.c / arr.length, g: t.g / arr.length };
-}
-function prWeeklyWorkouts() {
-  var db = loadDB();
-  var from = new Date(prDaysAgo(6) + 'T00:00:00');
-  return db.workouts.filter(function(w){
-    if (w.uid !== CU.id) return false;
-    var d = new Date((w.dt || '').replace(' ', 'T'));
-    return !isNaN(d) && d >= from;
-  }).length;
-}
-function prInsights(avg7, delta30, adh7, wk7) {
-  var out = [];
-  if (adh7 !== null) {
-    if (adh7 >= 85) out.push('Ottima aderenza calorica negli ultimi 7 giorni.');
-    else if (adh7 >= 65) out.push('Aderenza discreta: sei vicino al target, ma puoi essere più costante.');
-    else out.push('Aderenza bassa: stai andando fuori target troppo spesso.');
-  }
-  if (delta30 !== null) {
-    if (delta30 < -0.8) out.push('Il peso è in calo negli ultimi 30 giorni.');
-    else if (delta30 > 0.8) out.push('Il peso è in aumento negli ultimi 30 giorni.');
-    else out.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
-  }
-  if (wk7 === 0) out.push('Nessun workout registrato questa settimana.');
-  else if (wk7 < 3) out.push('Hai registrato pochi workout questa settimana.');
-  else out.push('Buona costanza negli allenamenti questa settimana.');
-  if (avg7 === null) out.push('Inserisci più pesi nel diario per avere trend affidabili.');
-  return out;
-}
-function prDraw(canvasId, series, color) {
-  var canvas = document.getElementById(canvasId);
-  if (!canvas || !canvas.getContext) return;
-  var ctx = canvas.getContext('2d');
-  var w = canvas.width = canvas.clientWidth || 320;
-  var h = canvas.height = 150;
-  ctx.clearRect(0,0,w,h);
-  if (!series || !series.length) {
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '12px sans-serif';
-    ctx.fillText('Nessun dato disponibile', 12, 24);
-    return;
-  }
-  var values = series.map(function(x){ return x.value || 0; });
-  var min = Math.min.apply(null, values);
-  var max = Math.max.apply(null, values);
-  var left = 34, right = 10, top = 12, bottom = 22;
-  var plotW = w - left - right, plotH = h - top - bottom;
-  var range = (max - min) || 1;
-  ctx.strokeStyle = '#233044';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(left, top); ctx.lineTo(left, h-bottom); ctx.lineTo(w-right, h-bottom); ctx.stroke();
-  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
-  series.forEach(function(p, i){
-    var x = left + (plotW * i) / Math.max(series.length - 1, 1);
-    var y = top + plotH - (((p.value || 0) - min) / range) * plotH;
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.fillStyle = color;
-  series.forEach(function(p, i){
-    var x = left + (plotW * i) / Math.max(series.length - 1, 1);
-    var y = top + plotH - (((p.value || 0) - min) / range) * plotH;
-    ctx.beginPath(); ctx.arc(x, y, 2.8, 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.fillStyle = '#94a3b8'; ctx.font = '11px sans-serif';
-  ctx.fillText(String(prRound(max)), 4, top + 8);
-  ctx.fillText(String(prRound(min)), 4, h - bottom);
-  ctx.fillText(series[0].label, left, h - 6);
-  ctx.fillText(series[series.length - 1].label, w - right - 34, h - 6);
-}
-function renderProgress() {
-  if (!CU) return;
-  var avg7 = prAvgWeight(7);
-  var delta30 = prDeltaWeight(30);
-  var adh7 = prAdherence(7);
-  var wk7 = prWeeklyWorkouts();
-  var macros = prWeeklyMacros();
-  prSet('pr-avg7', avg7 !== null ? prRound(avg7) + ' kg' : '-');
-  prSet('pr-d30', delta30 !== null ? ((delta30 > 0 ? '+' : '') + prRound(delta30) + ' kg') : '-');
-  prSet('pr-adh7', adh7 !== null ? Math.round(adh7) + '%' : '-');
-  prSet('pr-wk7', String(wk7));
-  prSet('pr-mp', Math.round(macros.p) + 'g');
-  prSet('pr-mc', Math.round(macros.c) + 'g');
-  prSet('pr-mg', Math.round(macros.g) + 'g');
-  var box = document.getElementById('progress-insights');
-  if (box) {
-    var ins = prInsights(avg7, delta30, adh7, wk7);
-    box.innerHTML = ins.map(function(x){ return '<div class="insight-item">• ' + x + '</div>'; }).join('');
-  }
-  prDraw('progress-weight-chart', prWeightPoints(30), '#3ecf8e');
-  prDraw('progress-cal-chart', prCalPoints(14), '#ff6b35');
 }
 
 // ============================================================
