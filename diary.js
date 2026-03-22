@@ -1,19 +1,19 @@
 // DIARIO
 function salvaPeso() {
   var val = parseFloat(document.getElementById('peso-inp').value) || 0;
-  if (val < 20 || val > 300) { alert('Inserisci un peso valido es. 82.5'); return; }
+  if (val < 20 || val > 300) { showToast('Inserisci un peso valido es. 82.5', 'error'); return; }
   var today = dkey(new Date());
   var log = getLog(state.user.id, today);
   log.peso = val;
   saveLog(state.user.id, today, log);
   document.getElementById('peso-inp').value = '';
   renderDiario();
-  alert('Peso salvato: ' + val + ' kg');
+  showToast('Peso salvato: ' + val + ' kg', 'success');
 }
 
 function calcolaPrevisione() {
   var po = parseFloat(document.getElementById('po-inp').value) || 0;
-  if (po < 20 || po > 300) { alert('Inserisci un peso obiettivo valido es. 78'); return; }
+  if (po < 20 || po > 300) { showToast('Inserisci un peso obiettivo valido es. 78', 'error'); return; }
   var ps = getLatestPeso(state.user.id, 30) || state.user.ps || 70;
   var fab = state.user.fab ? state.user.fab.kc : 2000;
   var kgDiff = po - ps;

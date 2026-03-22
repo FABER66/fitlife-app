@@ -135,3 +135,17 @@ html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
+
+
+.phase-tag{position:absolute;right:18px;top:20px;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:6px 10px;border-radius:999px;background:rgba(200,241,53,.08);border:1px solid rgba(200,241,53,.2);color:var(--acc)}
+.toast-root{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;width:min(92vw,380px)}
+.toast{opacity:0;transform:translateY(10px);transition:.2s ease;background:#11161d;border:1px solid var(--bd);color:#f2f2f2;padding:12px 14px;border-radius:14px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.28)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:rgba(62,207,142,.3)}
+.toast.error{border-color:rgba(255,107,53,.35)}
+.toast.info{border-color:rgba(200,241,53,.28)}
+.sync-badge{position:fixed;right:14px;bottom:88px;z-index:9998;padding:8px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.3px;border:1px solid var(--bd);background:#0f1319;color:var(--mu)}
+.sync-badge.ok{color:var(--g);border-color:rgba(62,207,142,.25)}
+.sync-badge.syncing{color:var(--acc);border-color:rgba(200,241,53,.25)}
+.sync-badge.queued{color:#ffd166;border-color:rgba(255,209,102,.25)}
+.sync-badge.offline,.sync-badge.idle{color:var(--mu)}

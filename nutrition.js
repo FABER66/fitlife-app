@@ -10,9 +10,9 @@ function saveLog(uid, date, log) {
   db.logs[uid + '_' + date] = normalized;
   saveDB(db);
   if (AUTH_TOKEN) {
-    dbCall('db', {
-      table: 'logs', method: 'upsert',
-      values: {user_id: uid, data: date, pasti: normalized.pasti, kcal_bruciate: normalized.kcalBruciate || 0, peso: normalized.peso || 0}
+    pushLogToServer(uid, date, normalized).then(function(ok) {
+      if (!ok) enqueuePendingOp('log', {uid: uid, date: date, log: normalized});
+      else setSyncStatus('ok', 'Sincronizzato');
     });
   }
 }
@@ -64,6 +64,7 @@ function delAlim(p, i) {
   log.pasti[p].splice(i, 1);
   saveLog(state.user.id, state.currentDate, log);
   renderNutri();
+  showToast('Alimento rimosso', 'info');
 }
 
 function aprMod() {
@@ -101,7 +102,7 @@ async function callFoodAI() {
     document.getElementById('food-items').innerHTML = h;
     document.getElementById('food-res').className = 'ares on';
   } catch(e) {
-    alert('Errore AI: ' + e.message);
+    showToast('Errore AI: ' + e.message, 'error');
   } finally {
     document.getElementById('food-ld').style.display = 'none';
   }
@@ -123,7 +124,7 @@ function addFoodItems() {
 function addManuale() {
   var nm = document.getElementById('mn-nm').value.trim();
   var kc = parseFloat(document.getElementById('mn-kc').value) || 0;
-  if (!nm || !kc) { alert('Inserisci nome e calorie.'); return; }
+  if (!nm || !kc) { showToast('Inserisci nome e calorie.', 'error'); return; }
   var p = document.getElementById('mn-pasto').value;
   var log = getLog(state.user.id, state.currentDate);
   log.pasti[p].push({
