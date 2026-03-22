@@ -5,12 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MyFitLife</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0e0e0e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="MyFitLife">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{background:#0e0e0e;color:#f2f2f2;font-family:'DM Sans',sans-serif;min-height:100%;overflow-x:hidden}
@@ -1590,7 +1584,6 @@ function renderProfilo() {
   h += '</select><label class="lbl">Obiettivo</label><select class="fi" id="ep-ob">';
   [['dimagrire','Dimagrire'],['mantenere','Mantenere'],['massa','Massa']].forEach(function(o) { h += '<option value="' + o[0] + '"' + (CU.ob === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; });
   h += '</select><button class="bp" onclick="aggProfilo()" style="margin-top:8px">Aggiorna fabbisogno</button></div>';
-  h += '<button class="boutl" onclick="installApp()" style="border-color:var(--g);color:var(--g);margin-bottom:8px">Installa app</button>';
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
 }
@@ -1620,38 +1613,6 @@ function aggProfilo() {
 // ============================================================
 renderQuick();
 ripristinaSessione();
-</script>
-<script>
-var deferredInstallPrompt = null;
-
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  localStorage.setItem('mfl_install_ready', '1');
-});
-
-async function installApp() {
-  if (!deferredInstallPrompt) {
-    alert('Su iPhone usa Condividi > Aggiungi alla schermata Home. Su Android/Chrome cerca il menu Installa app.');
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  try { await deferredInstallPrompt.userChoice; } catch(e) {}
-  deferredInstallPrompt = null;
-  localStorage.removeItem('mfl_install_ready');
-}
-
-window.addEventListener('appinstalled', function() {
-  localStorage.removeItem('mfl_install_ready');
-});
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./service-worker.js').catch(function(err) {
-      console.warn('SW non registrato', err);
-    });
-  });
-}
 </script>
 </body>
 </html>
