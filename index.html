@@ -1293,7 +1293,7 @@ function renderProfilo() {
   h += themeSwatchButton('celeste','Celeste','linear-gradient(135deg,#081018 0%,#162231 55%,#87c9ff 100%)');
   h += themeSwatchButton('verde','Verde','linear-gradient(135deg,#0b120d 0%,#18231b 55%,#93d45c 100%)');
   h += themeSwatchButton('sunset','Sunset','linear-gradient(135deg,#140d10 0%,#261a20 55%,#ff9f7a 100%)');
-  h += '</div><div style="font-size:12px;color:var(--mu);margin-top:10px;line-height:1.6">Scegli il look dell’app. Il tema viene salvato sul dispositivo.</div></div>';
+  h += '</div><div style="font-size:12px;color:var(--mu);margin-top:10px;line-height:1.6">Scegli il look dell app. Il tema viene salvato sul dispositivo.</div></div>';
 
   h += '<button class="bdgr" onclick="logout()">Esci</button>';
   document.getElementById('prof-cnt').innerHTML = h;
@@ -1405,13 +1405,13 @@ function renderProgress() {
   var insights = [];
   if (adh7 !== null) {
     if (adh7 >= 85) insights.push('Ottima aderenza calorica negli ultimi 7 giorni.');
-    else if (adh7 >= 65) insights.push('Aderenza discreta, ma puoi essere più costante.');
+    else if (adh7 >= 65) insights.push('Aderenza discreta, ma puoi essere piu costante.');
     else insights.push('Aderenza bassa: stai andando spesso fuori target.');
   }
   if (delta30 !== null) {
-    if (delta30 < -0.5) insights.push('Il peso è in calo negli ultimi 30 giorni.');
-    else if (delta30 > 0.5) insights.push('Il peso è in aumento negli ultimi 30 giorni.');
-    else insights.push('Il peso è abbastanza stabile negli ultimi 30 giorni.');
+    if (delta30 < -0.5) insights.push('Il peso e in calo negli ultimi 30 giorni.');
+    else if (delta30 > 0.5) insights.push('Il peso e in aumento negli ultimi 30 giorni.');
+    else insights.push('Il peso e abbastanza stabile negli ultimi 30 giorni.');
   }
   if (wk7 === 0) insights.push('Nessun workout registrato questa settimana.');
   else if (wk7 < 3) insights.push('Hai registrato pochi workout questa settimana.');
