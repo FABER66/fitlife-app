@@ -59,8 +59,12 @@ function bindActionEvents() {
 
 function initApp() {
   bindActionEvents();
+  setupRuntimeBindings();
   ripristinaSessione().then(function(ok) {
-    if (!ok) renderQuick();
+    if (!ok) {
+      renderQuick();
+      setSyncStatus(navigator.onLine ? 'idle' : 'offline', navigator.onLine ? 'Locale' : 'Offline');
+    }
   });
 }
 
@@ -68,4 +72,19 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
+}
+
+
+function setupRuntimeBindings() {
+  var fi = document.getElementById('finput');
+  if (fi) fi.addEventListener('change', handleScan);
+  window.addEventListener('online', function() {
+    setSyncStatus('syncing', 'Online');
+    syncPendingOps().then(function() {
+      if (state.user && AUTH_TOKEN) hydrateUserData();
+    });
+  });
+  window.addEventListener('offline', function() {
+    setSyncStatus('offline', 'Offline');
+  });
 }

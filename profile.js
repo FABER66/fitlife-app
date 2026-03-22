@@ -17,7 +17,7 @@ function renderProfilo() {
 }
 
 function salvaKey() {
-  alert('In questa versione non serve inserire alcuna API key.');
+  showToast('In questa versione non serve inserire alcuna API key.', 'info');
 }
 
 function aggProfilo() {
@@ -28,6 +28,6 @@ function aggProfilo() {
   state.user.lav = document.getElementById('ep-lav').value;
   state.user.fab = calcFab(state.user.sx, state.user.ps, state.user.al, state.user.et, state.user.at, state.user.ob, state.user.lav);
   saveUser();
-  alert('Aggiornato! Fabbisogno: ' + state.user.fab.kc + ' kcal/gg');
+  showToast('Profilo aggiornato. Fabbisogno: ' + state.user.fab.kc + ' kcal/gg', 'success');
   renderProfilo();
 }
