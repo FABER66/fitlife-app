@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   const AKEY = process.env.ANTHROPIC_API_KEY;
   const SURL = process.env.SUPABASE_URL;
   const SKEY = process.env.SUPABASE_KEY;
+  const SSERVICE = process.env.SUPABASE_SERVICE_KEY;
   const ADMIN_PW = process.env.ADMIN_PASSWORD;
 
   try {
@@ -24,10 +25,10 @@ export default async function handler(req, res) {
       }
       const [usersRes, workoutsRes] = await Promise.all([
         fetch(`${SURL}/rest/v1/profiles?select=*`, {
-          headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` }
+          headers: { apikey: SSERVICE, Authorization: `Bearer ${SSERVICE}` }
         }),
         fetch(`${SURL}/rest/v1/workouts?select=id,user_id`, {
-          headers: { apikey: SKEY, Authorization: `Bearer ${SKEY}` }
+          headers: { apikey: SSERVICE, Authorization: `Bearer ${SSERVICE}` }
         })
       ]);
       const users = await usersRes.json();
