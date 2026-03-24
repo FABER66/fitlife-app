@@ -178,7 +178,7 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
         <div><label class="lbl">Cognome</label><input class="fi" id="r-cg" placeholder="Rossi"></div>
       </div>
       <label class="lbl">Email</label><input class="fi" id="r-em" type="email" placeholder="mario@email.com">
-      <label class="lbl">Password</label><input class="fi" id="r-pw" type="password" placeholder="min 4 caratteri">
+      <label class="lbl">Password</label><input class="fi" id="r-pw" type="password" placeholder="min 6 caratteri">
       <div class="g2">
         <div><label class="lbl">Eta</label><input class="fi" id="r-et" type="number" placeholder="35"></div>
         <div><label class="lbl">Sesso</label><select class="fi" id="r-sx"><option value="M">Maschio</option><option value="F">Femmina</option></select></div>
@@ -345,7 +345,6 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
     <div id="diario-list"></div>
   </div>
 
-
   <div id="pg-progressi" class="pg">
     <div class="ptit">Progressi</div>
     <div class="card">
@@ -430,7 +429,6 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
 // PROXY AI - usa Vercel server, fallback diretto
 // ============================================================
 async function callAI(key, payload) {
-  // Usa sempre il proxy Vercel - nessuna key richiesta all utente
   var r = await fetch('/api/chat', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -442,7 +440,7 @@ async function callAI(key, payload) {
 }
 
 // ============================================================
-// DATABASE - Supabase + localStorage fallback
+// DATABASE - Supabase + localStorage cache
 // ============================================================
 var DB = 'fl5';
 var AUTH_TOKEN = null;
@@ -466,7 +464,6 @@ function fmtD(s) {
   return d.toLocaleDateString('it-IT', {weekday:'short', day:'numeric', month:'short'});
 }
 
-// Chiamata al server per operazioni DB
 async function dbCall(action, data) {
   try {
     var body = {action: action, data: data};
@@ -530,6 +527,12 @@ function showErr(m) {
   e.style.display = 'block';
 }
 
+function clearErr() {
+  var e = document.getElementById('aerr');
+  e.textContent = '';
+  e.style.display = 'none';
+}
+
 function renderQuick() {
   var db = loadDB(), w = document.getElementById('qlist');
   if (!db.users || !db.users.length) { w.innerHTML = ''; return; }
@@ -548,29 +551,45 @@ function quickLogin(id) {
 async function doAccedi() {
   var em = document.getElementById('l-em').value.trim();
   var pw = document.getElementById('l-pw').value;
+
   if (!em) { showErr('Inserisci email.'); return; }
   if (!pw) { showErr('Inserisci password.'); return; }
+
   showErr('Accedo...');
-  // Prova login Supabase
-  var res = await dbCall('signin', {email: em, password: pw});
-  if (res && res.token) {
-    AUTH_TOKEN = res.token;
-    USER_ID = res.userId;
-    localStorage.setItem('fl5_token', AUTH_TOKEN);
-    localStorage.setItem('fl5_uid', USER_ID);
-    // Carica profilo
-    var pres = await dbCall('db', {table:'profiles', method:'select', filter:{id: USER_ID}});
-    if (pres && pres.result && pres.result.length) {
-      CU = supabaseToUser(pres.result[0]);
-      entrApp();
-      return;
-    }
+
+  var res = await dbCall('signin', { email: em, password: pw });
+
+  if (!res || !res.token || !res.userId) {
+    showErr('Login online fallito. Controlla email, password o connessione.');
+    return;
   }
-  // Fallback localStorage
+
+  AUTH_TOKEN = res.token;
+  USER_ID = res.userId;
+  localStorage.setItem('fl5_token', AUTH_TOKEN);
+  localStorage.setItem('fl5_uid', USER_ID);
+
+  var pres = await dbCall('db', {
+    table: 'profiles',
+    method: 'select',
+    filter: { id: USER_ID }
+  });
+
+  if (!pres || !pres.result || !pres.result.length) {
+    showErr('Login riuscito ma profilo non trovato.');
+    return;
+  }
+
+  CU = supabaseToUser(pres.result[0]);
+
   var db = loadDB();
-  var u = db.users.find(function(x) { return x.em === em && x.pw === pw; });
-  if (!u) { showErr('Email o password errati.'); return; }
-  CU = u; entrApp();
+  var i = db.users.findIndex(function(u) { return u.id === CU.id; });
+  if (i >= 0) db.users[i] = CU;
+  else db.users.push(CU);
+  saveDB(db);
+
+  clearErr();
+  entrApp();
 }
 
 function supabaseToUser(p) {
@@ -598,43 +617,77 @@ async function doRegistra() {
   var po = parseFloat(document.getElementById('r-po').value) || 0;
   var privacy = document.getElementById('r-privacy');
   var marketing = document.getElementById('r-marketing');
+
   if (!nm) { showErr('Inserisci il nome.'); return; }
   if (!cg) { showErr('Inserisci il cognome.'); return; }
   if (!em || em.indexOf('@') < 1) { showErr('Email non valida.'); return; }
-  if (!pw || pw.length < 4) { showErr('Password min 4 caratteri.'); return; }
+  if (!pw || pw.length < 6) { showErr('Password min 6 caratteri.'); return; }
   if (et < 10 || et > 99) { showErr('Eta non valida.'); return; }
   if (ps < 20 || ps > 300) { showErr('Peso non valido.'); return; }
   if (al < 100 || al > 250) { showErr('Altezza non valida.'); return; }
   if (!privacy || !privacy.checked) { showErr('Devi accettare la Privacy Policy per continuare.'); return; }
+
   var consensoMarketing = marketing && marketing.checked ? true : false;
   var fab = calcFab(sx, ps, al, et, at, ob, lav);
-  var schede = [{id:'A',nm:'Scheda A',ex:[]},{id:'B',nm:'Scheda B',ex:[]}];
+  var schede = [
+    {id:'A',nm:'Scheda A',ex:[]},
+    {id:'B',nm:'Scheda B',ex:[]}
+  ];
+
   showErr('Creo il profilo...');
-  // Registra su Supabase
-  var res = await dbCall('signup', {
-    email: em, password: pw,
-    profile: {nm:nm, cg:cg, et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, act_s:'A', marketing:consensoMarketing}
-  });
-  if (res && res.userId) {
-    // Login automatico dopo registrazione
-    var loginRes = await dbCall('signin', {email: em, password: pw});
-    if (loginRes && loginRes.token) {
-      AUTH_TOKEN = loginRes.token;
-      USER_ID = loginRes.userId;
-      localStorage.setItem('fl5_token', AUTH_TOKEN);
-      localStorage.setItem('fl5_uid', USER_ID);
+
+  var signupRes = await dbCall('signup', {
+    email: em,
+    password: pw,
+    profile: {
+      nm:nm, cg:cg, et:et, sx:sx, ps:ps, al:al, at:at,
+      ob:ob, lav:lav, po:po, fab:fab, schede:schede,
+      act_s:'A', marketing:consensoMarketing
     }
-    CU = {id: res.userId, nm:nm, cg:cg, em:em, pw:pw, et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, actS:'A', apiKey:'', cre:new Date().toISOString()};
-    entrApp();
+  });
+
+  if (!signupRes || !signupRes.userId) {
+    showErr('Registrazione online fallita.');
     return;
   }
-  // Fallback localStorage
-  showErr(res ? 'Errore: ' + JSON.stringify(res) : 'Salvo in locale...');
+
+  var loginRes = await dbCall('signin', { email: em, password: pw });
+
+  if (!loginRes || !loginRes.token || !loginRes.userId) {
+    showErr('Profilo creato ma login automatico fallito.');
+    return;
+  }
+
+  AUTH_TOKEN = loginRes.token;
+  USER_ID = loginRes.userId;
+  localStorage.setItem('fl5_token', AUTH_TOKEN);
+  localStorage.setItem('fl5_uid', USER_ID);
+
+  var pres = await dbCall('db', {
+    table: 'profiles',
+    method: 'select',
+    filter: { id: USER_ID }
+  });
+
+  if (pres && pres.result && pres.result.length) {
+    CU = supabaseToUser(pres.result[0]);
+  } else {
+    CU = {
+      id: USER_ID, nm:nm, cg:cg, em:em, pw:'',
+      et:et, sx:sx, ps:ps, al:al, at:at,
+      ob:ob, lav:lav, po:po, fab:fab,
+      schede:schede, actS:'A', apiKey:'',
+      cre:new Date().toISOString()
+    };
+  }
+
   var db = loadDB();
-  if (db.users.find(function(x) { return x.em === em; })) { showErr('Email gia registrata.'); return; }
-  CU = {id:uid(), nm:nm, cg:cg, em:em, pw:pw, et:et, sx:sx, ps:ps, al:al, at:at, ob:ob, lav:lav, po:po, fab:fab, schede:schede, actS:'A', apiKey:'', cre:new Date().toISOString()};
-  db.users.push(CU);
+  var i = db.users.findIndex(function(u) { return u.id === CU.id; });
+  if (i >= 0) db.users[i] = CU;
+  else db.users.push(CU);
   saveDB(db);
+
+  clearErr();
   entrApp();
 }
 
@@ -646,14 +699,12 @@ function entrApp() {
   curD = dkey(new Date());
   mostraPg('home');
   popScanDest();
-  // Sincronizza dati da Supabase in background
   if (AUTH_TOKEN) {
     syncLogsFromSupabase().then(function() { renderHome(); renderNutri(); });
     syncWorkoutsFromSupabase().then(function() { renderHome(); });
   }
 }
 
-// Tenta ripristino sessione al caricamento pagina
 async function ripristinaSessione() {
   var token = localStorage.getItem('fl5_token');
   var userId = localStorage.getItem('fl5_uid');
@@ -668,7 +719,6 @@ async function ripristinaSessione() {
       return true;
     }
   } catch(e) {}
-  // Fallback locale
   var db = loadDB();
   var u = db.users.find(function(x) { return x.id === userId; });
   if (u) { CU = u; entrApp(); return true; }
@@ -732,7 +782,6 @@ function getLog(uid, date) {
   return db.logs[uid + '_' + date] || {pasti:{Colazione:[], Pranzo:[], Cena:[], Spuntino:[]}, kcalBruciate:0, peso:0};
 }
 
-// Carica log da Supabase e li mette nel localStorage
 async function syncLogsFromSupabase() {
   if (!AUTH_TOKEN || !USER_ID) return;
   try {
@@ -751,7 +800,6 @@ async function syncLogsFromSupabase() {
   } catch(e) {}
 }
 
-// Carica workout da Supabase
 async function syncWorkoutsFromSupabase() {
   if (!AUTH_TOKEN || !USER_ID) return;
   try {
@@ -770,12 +818,11 @@ async function syncWorkoutsFromSupabase() {
     saveDB(db);
   } catch(e) {}
 }
+
 function saveLog(uid, date, log) {
-  // Salva locale
   var db = loadDB();
   db.logs[uid + '_' + date] = log;
   saveDB(db);
-  // Salva su Supabase in background
   if (AUTH_TOKEN) {
     dbCall('db', {
       table: 'logs', method: 'upsert',
@@ -783,6 +830,7 @@ function saveLog(uid, date, log) {
     });
   }
 }
+
 function getTot(log) {
   var k=0, p=0, c=0, g=0;
   Object.values(log.pasti).forEach(function(al) {
@@ -940,12 +988,10 @@ function addManuale() {
 function getScheda(id) { return CU.schede.find(function(s) { return s.id === (id || CU.actS); }); }
 
 function saveUser() {
-  // Salva locale
   var db = loadDB();
   var i = db.users.findIndex(function(u) { return u.id === CU.id; });
   if (i >= 0) db.users[i] = CU; else db.users.push(CU);
   saveDB(db);
-  // Salva su Supabase in background
   if (AUTH_TOKEN) {
     dbCall('db', {
       table: 'profiles', method: 'update',
@@ -1060,7 +1106,6 @@ async function salvaWorkout() {
   }
   var db = loadDB();
   var wid = uid();
-  // Salva su Supabase in background
   if (AUTH_TOKEN) {
     dbCall('db', {
       table: 'workouts', method: 'insert',
@@ -1127,7 +1172,6 @@ async function handleScan(e) {
     var isPDF = file.type === 'application/pdf' || fname.endsWith('.pdf');
     var mt = isPDF ? 'application/pdf' : (file.type || 'image/jpeg');
 
-    // PASSAGGIO 1: trascrivi la scheda
     var p1 = 'Trascrivi questa scheda di allenamento. Per ogni esercizio scrivi su una riga: NOME | SERIE | DURATA con unita (min/sec/reps) | INTENSITA (kg/RPE/BW) | NOTE. Mantieni le unita originali.';
     var mc1 = isPDF
       ? [{type:'document', source:{type:'base64', media_type:'application/pdf', data:b64}}, {type:'text', text:p1}]
@@ -1138,7 +1182,6 @@ async function handleScan(e) {
     if (d1.error) throw new Error(d1.error.message);
     var testo = d1.content && d1.content[0] && d1.content[0].text || '';
 
-    // PASSAGGIO 2: JSON strutturato
     var p2 = 'Dati esercizi: ' + testo + ' --- Converti in JSON. Regole: 1) durata in min o sec = tipo tempo, metti in campo tempo. 2) durata in reps o numero = tipo reps, metti in campo reps. 3) RPE = non e kg. 4) BW = peso corporeo. Traduzioni: Treadmill=Tapis Roulant, Upright bike=Cyclette, Arm ergometer=Ergometro braccia, Lat Pulldown=Lat Machine, Chest Press=Panca piana. Rispondi SOLO con questo JSON senza nient altro: {"esercizi":[{"nome":"Cyclette","serie":1,"reps":"","kg":"","tempo":"4 min","note":"RPE 3","tipo":"tempo"},{"nome":"Squat","serie":4,"reps":"20-40","kg":"BW","tempo":"","note":"","tipo":"reps"}]}';
 
     document.getElementById('fn').textContent = 'Struttura esercizi...';
@@ -1186,7 +1229,6 @@ async function handleScan(e) {
     alert('Errore scansione: ' + err.message);
   } finally {
     document.getElementById('scan-ld').style.display = 'none';
-    // Reset input file per permettere ricaricamento stesso file
     var fi = document.getElementById('finput');
     if (fi) fi.value = '';
   }
@@ -1382,7 +1424,6 @@ function aggProfilo() {
   alert('Aggiornato! Fabbisogno: ' + CU.fab.kc + ' kcal/gg');
   renderProfilo();
 }
-
 
 // ============================================================
 // PROGRESSI
@@ -1587,8 +1628,6 @@ function exportWorkoutCSV() {
   downloadFile('myfitlife-workout-' + dkey(new Date()) + '.csv', csv, 'text/csv;charset=utf-8');
 }
 
-
-
 var THEMES = {
   gold:{acc:'#c6a56b',g:'#59c7c0',o:'#ff8a5b',bg:'#090909',s1:'#141414',s2:'#1c1c1c',bd:'#2c2c2c',mu:'#a79f93',txt:'#f3efe7'},
   celeste:{acc:'#87c9ff',g:'#70e1d0',o:'#ff9a6b',bg:'#081018',s1:'#101a26',s2:'#162231',bd:'#26384d',mu:'#94a7bb',txt:'#eef6ff'},
@@ -1616,7 +1655,6 @@ function themeSwatchButton(name, label, gradient) {
   var active = (localStorage.getItem('mfl_theme') || 'gold') === name ? ' on' : '';
   return '<button class="theme-btn' + active + '" data-theme="' + name + '" onclick="applyTheme(\'' + name + '\')"><div class="theme-sw" style="background:' + gradient + '"></div><div class="theme-lbl">' + label + '</div></button>';
 }
-
 
 // ============================================================
 // INIT
