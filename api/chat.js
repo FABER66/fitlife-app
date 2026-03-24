@@ -1,23 +1,34 @@
-if (!SURL) return res.status(500).json({ error: 'SUPABASE_URL mancante' });
-if (!SKEY) return res.status(500).json({ error: 'SUPABASE_KEY mancante' });
-if (!SSERVICE) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY mancante' });
-if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' });export default async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   const body = req.body || {};
+
   const AKEY = process.env.ANTHROPIC_API_KEY;
   const SURL = process.env.SUPABASE_URL;
-  const SKEY = process.env.SUPABASE_KEY;
-  const SSERVICE = process.env.SUPABASE_SERVICE_KEY;
+  const SKEY = process.env.SUPABASE_KEY; // anon/public key
+  const SSERVICE = process.env.SUPABASE_SERVICE_KEY; // service role key
   const ADMIN_PW = process.env.ADMIN_PASSWORD;
 
+  const parseJsonSafe = async (response) => {
+    const text = await response.text();
+    try {
+      return { text, data: JSON.parse(text) };
+    } catch {
+      return { text, data: null };
+    }
+  };
+
   try {
+    if (!SURL) return res.status(500).json({ error: 'SUPABASE_URL mancante' });
+    if (!SKEY) return res.status(500).json({ error: 'SUPABASE_KEY mancante' });
+    if (!SSERVICE) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY mancante' });
+    if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' });
 
     // ============================================================
     // ADMIN
@@ -26,17 +37,45 @@ if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' })
       if (body.adminPw !== ADMIN_PW) {
         return res.status(401).json({ error: 'Non autorizzato' });
       }
+
       const [usersRes, workoutsRes] = await Promise.all([
         fetch(`${SURL}/rest/v1/profiles?select=*`, {
-          headers: { apikey: SSERVICE, Authorization: `Bearer ${SSERVICE}` }
+          method: 'GET',
+          headers: {
+            apikey: SSERVICE,
+            Authorization: `Bearer ${SSERVICE}`
+          }
         }),
         fetch(`${SURL}/rest/v1/workouts?select=id,user_id`, {
-          headers: { apikey: SSERVICE, Authorization: `Bearer ${SSERVICE}` }
+          method: 'GET',
+          headers: {
+            apikey: SSERVICE,
+            Authorization: `Bearer ${SSERVICE}`
+          }
         })
       ]);
-      const users = await usersRes.json();
-      const workouts = await workoutsRes.json();
-      return res.json({ users, workouts });
+
+      const usersParsed = await parseJsonSafe(usersRes);
+      const workoutsParsed = await parseJsonSafe(workoutsRes);
+
+      if (!usersRes.ok) {
+        return res.status(usersRes.status).json({
+          error: 'Errore lettura profiles',
+          details: usersParsed.data || usersParsed.text
+        });
+      }
+
+      if (!workoutsRes.ok) {
+        return res.status(workoutsRes.status).json({
+          error: 'Errore lettura workouts',
+          details: workoutsParsed.data || workoutsParsed.text
+        });
+      }
+
+      return res.json({
+        users: Array.isArray(usersParsed.data) ? usersParsed.data : [],
+        workouts: Array.isArray(workoutsParsed.data) ? workoutsParsed.data : []
+      });
     }
 
     // ============================================================
@@ -45,7 +84,11 @@ if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' })
     if (body.action === 'signup') {
       const { email, password, profile } = body.data || {};
 
-      const r1 = await fetch(`${SURL}/auth/v1/signup`, {
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email e password obbligatorie' });
+      }
+
+      const signupRes = await fetch(`${SURL}/auth/v1/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,70 +98,63 @@ if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' })
         body: JSON.stringify({ email, password })
       });
 
-      const a1 = await r1.json();
-console.log('SIGNUP STATUS', r1.status);
-console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
-        return res.status(400).json({
-          error: a1.error_description || a1.msg || a1.message || 'Signup failed'
+      const signupParsed = await parseJsonSafe(signupRes);
+      const signupData = signupParsed.data || {};
+
+      console.log('SIGNUP STATUS', signupRes.status);
+      console.log('SIGNUP RESPONSE', signupData || signupParsed.text);
+
+      if (!signupRes.ok || signupData.error) {
+        return res.status(signupRes.status || 400).json({
+          error:
+            signupData.error_description ||
+            signupData.msg ||
+            signupData.message ||
+            'Signup failed',
+          details: signupData || signupParsed.text
         });
       }
 
-      const uid = a1.user && a1.user.id;
+      const uid = signupData?.user?.id;
       if (!uid) {
-        return res.status(400).json({ error: 'Utente non creato correttamente' });
-      }
-
-      // prova prima update sul profilo (utile se hai trigger che crea la riga)
-      let rProf = await fetch(
-        `${SURL}/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=*`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: SKEY,
-            Authorization: `Bearer ${SKEY}`,
-            Prefer: 'return=representation'
-          },
-          body: JSON.stringify({
-            em: email,
-            ...(profile || {})
-          })
-        }
-      );
-
-      let profData = [];
-      try {
-        profData = await rProf.json();
-      } catch (_) {
-        profData = [];
-      }
-
-      // se non esiste ancora la riga, la crea
-      if (!rProf.ok || !Array.isArray(profData) || !profData.length) {
-        const rInsert = await fetch(`${SURL}/rest/v1/profiles`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: SKEY,
-            Authorization: `Bearer ${SKEY}`,
-            Prefer: 'return=representation'
-          },
-          body: JSON.stringify({
-            id: uid,
-            em: email,
-            ...(profile || {})
-          })
+        return res.status(400).json({
+          error: 'Utente auth non creato correttamente',
+          details: signupData || signupParsed.text
         });
-
-        const ins = await rInsert.json().catch(() => null);
-        if (!rInsert.ok) {
-          return res.status(400).json({
-            error: ins?.message || 'Profilo non creato'
-          });
-        }
       }
 
-      return res.json({ userId: uid });
+      const profilePayload = {
+        id: uid,
+        em: email,
+        ...(profile || {})
+      };
+
+      const profileRes = await fetch(`${SURL}/rest/v1/profiles?on_conflict=id`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SSERVICE,
+          Authorization: `Bearer ${SSERVICE}`,
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(profilePayload)
+      });
+
+      const profileParsed = await parseJsonSafe(profileRes);
+
+      if (!profileRes.ok) {
+        return res.status(profileRes.status).json({
+          error: 'Utente creato in auth ma profilo non creato',
+          userId: uid,
+          details: profileParsed.data || profileParsed.text
+        });
+      }
+
+      return res.json({
+        ok: true,
+        userId: uid,
+        profile: profileParsed.data
+      });
     }
 
     // ============================================================
@@ -127,7 +163,11 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
     if (body.action === 'signin') {
       const { email, password } = body.data || {};
 
-      const r2 = await fetch(`${SURL}/auth/v1/token?grant_type=password`, {
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email e password obbligatorie' });
+      }
+
+      const signinRes = await fetch(`${SURL}/auth/v1/token?grant_type=password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,30 +177,41 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
         body: JSON.stringify({ email, password })
       });
 
-      const a2 = await r2.json();
+      const signinParsed = await parseJsonSafe(signinRes);
+      const signinData = signinParsed.data || {};
 
-      if (!r2.ok || a2.error) {
-        return res.status(400).json({
-          error: a2.error_description || a2.msg || a2.message || 'Login failed'
+      if (!signinRes.ok || signinData.error) {
+        return res.status(signinRes.status || 400).json({
+          error:
+            signinData.error_description ||
+            signinData.msg ||
+            signinData.message ||
+            'Login failed',
+          details: signinData || signinParsed.text
         });
       }
 
-      // Aggiorna last_login in background
-      if (a2.user && a2.user.id) {
-        fetch(`${SURL}/rest/v1/profiles?id=eq.${a2.user.id}`, {
+      if (signinData?.user?.id) {
+        fetch(`${SURL}/rest/v1/profiles?id=eq.${encodeURIComponent(signinData.user.id)}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            apikey: SKEY,
-            Authorization: `Bearer ${SKEY}`
+            apikey: SSERVICE,
+            Authorization: `Bearer ${SSERVICE}`,
+            Prefer: 'return=representation'
           },
-          body: JSON.stringify({ last_login: new Date().toISOString() })
+          body: JSON.stringify({
+            last_login: new Date().toISOString()
+          })
+        }).catch((err) => {
+          console.error('Errore aggiornamento last_login:', err);
         });
       }
 
       return res.json({
-        token: a2.access_token,
-        userId: a2.user && a2.user.id
+        ok: true,
+        token: signinData.access_token,
+        userId: signinData?.user?.id
       });
     }
 
@@ -170,6 +221,10 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
     if (body.action === 'db') {
       const { table, method, filter, values, onConflict } = body.data || {};
       const tok = body.token || SKEY;
+
+      if (!table || !method) {
+        return res.status(400).json({ error: 'Table e method obbligatori' });
+      }
 
       let url = `${SURL}/rest/v1/${table}`;
       const headers = {
@@ -192,21 +247,21 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
 
         url += `?${params.toString()}`;
 
-        const r3 = await fetch(url, {
+        const r = await fetch(url, {
           method: 'GET',
           headers
         });
 
-        const result = await r3.json().catch(() => []);
+        const parsed = await parseJsonSafe(r);
 
-        if (!r3.ok) {
-          return res.status(400).json({
-            error: result?.message || 'Errore select database',
-            result
+        if (!r.ok) {
+          return res.status(r.status).json({
+            error: parsed.data?.message || 'Errore select database',
+            details: parsed.data || parsed.text
           });
         }
 
-        return res.json({ result });
+        return res.json({ result: parsed.data || [] });
       }
 
       // UPSERT
@@ -217,42 +272,42 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
 
         headers.Prefer = 'resolution=merge-duplicates,return=representation';
 
-        const r3 = await fetch(url, {
+        const r = await fetch(url, {
           method: 'POST',
           headers,
           body: JSON.stringify(values)
         });
 
-        const result = await r3.json().catch(() => []);
+        const parsed = await parseJsonSafe(r);
 
-        if (!r3.ok) {
-          return res.status(400).json({
-            error: result?.message || 'Errore upsert database',
-            result
+        if (!r.ok) {
+          return res.status(r.status).json({
+            error: parsed.data?.message || 'Errore upsert database',
+            details: parsed.data || parsed.text
           });
         }
 
-        return res.json({ result });
+        return res.json({ result: parsed.data || [] });
       }
 
       // INSERT
       if (method === 'insert') {
-        const r3 = await fetch(url, {
+        const r = await fetch(url, {
           method: 'POST',
           headers,
           body: JSON.stringify(values)
         });
 
-        const result = await r3.json().catch(() => []);
+        const parsed = await parseJsonSafe(r);
 
-        if (!r3.ok) {
-          return res.status(400).json({
-            error: result?.message || 'Errore insert database',
-            result
+        if (!r.ok) {
+          return res.status(r.status).json({
+            error: parsed.data?.message || 'Errore insert database',
+            details: parsed.data || parsed.text
           });
         }
 
-        return res.json({ result });
+        return res.json({ result: parsed.data || [] });
       }
 
       // UPDATE
@@ -268,22 +323,22 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
 
         url += `?${params.toString()}`;
 
-        const r3 = await fetch(url, {
+        const r = await fetch(url, {
           method: 'PATCH',
           headers,
           body: JSON.stringify(values)
         });
 
-        const result = await r3.json().catch(() => []);
+        const parsed = await parseJsonSafe(r);
 
-        if (!r3.ok) {
-          return res.status(400).json({
-            error: result?.message || 'Errore update database',
-            result
+        if (!r.ok) {
+          return res.status(r.status).json({
+            error: parsed.data?.message || 'Errore update database',
+            details: parsed.data || parsed.text
           });
         }
 
-        return res.json({ result });
+        return res.json({ result: parsed.data || [] });
       }
 
       return res.status(400).json({ error: 'Metodo database non riconosciuto' });
@@ -293,7 +348,11 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
     // AI ANTHROPIC
     // ============================================================
     if (body.payload) {
-      const r4 = await fetch('https://api.anthropic.com/v1/messages', {
+      if (!AKEY) {
+        return res.status(500).json({ error: 'ANTHROPIC_API_KEY mancante' });
+      }
+
+      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -303,20 +362,24 @@ console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
         body: JSON.stringify(body.payload)
       });
 
-      const ai = await r4.json();
+      const aiParsed = await parseJsonSafe(aiRes);
+      const aiData = aiParsed.data || {};
 
-      if (!r4.ok) {
-        return res.status(400).json({
-          error: ai?.error?.message || ai?.error || 'Errore Anthropic'
+      if (!aiRes.ok) {
+        return res.status(aiRes.status || 400).json({
+          error: aiData?.error?.message || aiData?.error || 'Errore Anthropic',
+          details: aiData || aiParsed.text
         });
       }
 
-      return res.json(ai);
+      return res.json(aiData);
     }
 
     return res.status(400).json({ error: 'Azione non riconosciuta' });
-
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    console.error('API CHAT ERROR:', e);
+    return res.status(500).json({
+      error: e?.message || 'Errore server'
+    });
   }
 }
