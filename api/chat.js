@@ -56,8 +56,8 @@ if (!ADMIN_PW) return res.status(500).json({ error: 'ADMIN_PASSWORD mancante' })
       });
 
       const a1 = await r1.json();
-
-      if (!r1.ok || a1.error) {
+console.log('SIGNUP STATUS', r1.status);
+console.log('SIGNUP RESPONSE', a1);      if (!r1.ok || a1.error) {
         return res.status(400).json({
           error: a1.error_description || a1.msg || a1.message || 'Signup failed'
         });
