@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>MyFitLife</title>
+<title>MyFitLife FIX V2</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -141,23 +141,21 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
 .ddn{font-weight:700;color:var(--acc);font-size:12px}
 .ddb{display:flex;gap:5px;margin-top:7px;padding-top:7px;border-top:1px solid var(--bd)}
 .dbp{flex:1;border-radius:7px;padding:5px 3px;text-align:center;font-size:10px;font-weight:700}
-
 .theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
 .theme-btn{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:10px 6px;cursor:pointer;text-align:center}
 .theme-btn.on{border-color:var(--acc);box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
 .theme-sw{width:38px;height:38px;border-radius:50%;margin:0 auto 7px;border:2px solid rgba(255,255,255,.08);box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .theme-lbl{font-size:11px;font-weight:700;color:#f2f2f2;line-height:1.2}
-
 .dots::after{content:'...';animation:dt 1.2s steps(4,end) infinite}
 @keyframes dt{0%,20%{content:'.'}40%{content:'..'}60%,100%{content:'...'}}
 </style>
 </head>
 <body>
-
+<!-- BUILD: FIX-REG-20260324 -->
 <!-- AUTH -->
 <div id="auth" class="scr on">
   <div class="alogo">My<b>FitLife</b></div>
-  <div class="asub">Allenamento · Nutrizione · AI</div>
+  <div class="asub">Allenamento · Nutrizione · AI · FIX V2</div>
   <div class="acard">
     <div class="atabs">
       <button class="atab on" id="t-acc" onclick="mostraTab('acc')">Accedi</button>
@@ -425,9 +423,6 @@ html,body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif
 <input type="file" id="backup-import" accept="application/json" style="display:none" onchange="importBackup(event)">
 
 <script>
-// ============================================================
-// PROXY AI - usa Vercel server, fallback diretto
-// ============================================================
 async function callAI(key, payload) {
   var r = await fetch('/api/chat', {
     method: 'POST',
@@ -439,9 +434,6 @@ async function callAI(key, payload) {
   return d;
 }
 
-// ============================================================
-// DATABASE - Supabase + localStorage cache
-// ============================================================
 var DB = 'fl5';
 var AUTH_TOKEN = null;
 var USER_ID = null;
@@ -466,30 +458,42 @@ function fmtD(s) {
 
 async function dbCall(action, data) {
   try {
-    var body = {action: action, data: data};
+    var body = { action: action, data: data };
     if (AUTH_TOKEN) body.token = AUTH_TOKEN;
+
     var r = await fetch('/api/chat', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    var result = await r.json();
-    if (result.error) throw new Error(result.error);
+
+    var result;
+    try {
+      result = await r.json();
+    } catch (e) {
+      result = { error: 'Risposta server non valida' };
+    }
+
+    if (!r.ok || result.error) {
+      return {
+        _error: result.error || ('Errore HTTP ' + r.status),
+        _status: r.status,
+        _details: result.details || null,
+        _raw: result
+      };
+    }
+
     return result;
-  } catch(e) {
-    console.error('DB error:', e.message);
-    return null;
+  } catch (e) {
+    return {
+      _error: e.message || 'Errore di rete',
+      _status: 0
+    };
   }
 }
 
-// ============================================================
-// STATO
-// ============================================================
 var CU = null, curD = dkey(new Date()), aiFood = [], openEx = {}, tSec = 0, tOn = false, tInt = null, scanExs = [];
 
-// ============================================================
-// FABBISOGNO - Mifflin-St Jeor + lavoro + TEF
-// ============================================================
 function calcFab(sx, ps, al, et, at, ob, lav) {
   var bmr = sx === 'M' ? 10*ps + 6.25*al - 5*et + 5 : 10*ps + 6.25*al - 5*et - 161;
   var tdee = bmr * parseFloat(at || 1.55);
@@ -510,9 +514,6 @@ function calcFab(sx, ps, al, et, at, ob, lav) {
   };
 }
 
-// ============================================================
-// AUTH
-// ============================================================
 function mostraTab(t) {
   document.getElementById('t-acc').className = 'atab' + (t === 'acc' ? ' on' : '');
   document.getElementById('t-reg').className = 'atab' + (t === 'reg' ? ' on' : '');
@@ -559,8 +560,9 @@ async function doAccedi() {
 
   var res = await dbCall('signin', { email: em, password: pw });
 
-  if (!res || !res.token || !res.userId) {
-    showErr('Login online fallito. Controlla email, password o connessione.');
+  if (!res || res._error || !res.token || !res.userId) {
+    console.log('SIGNIN ERROR:', res);
+    showErr('Login fallito: ' + (res && res._error ? res._error : 'errore sconosciuto'));
     return;
   }
 
@@ -575,7 +577,8 @@ async function doAccedi() {
     filter: { id: USER_ID }
   });
 
-  if (!pres || !pres.result || !pres.result.length) {
+  if (!pres || pres._error || !pres.result || !pres.result.length) {
+    console.log('PROFILE LOAD ERROR:', pres);
     showErr('Login riuscito ma profilo non trovato.');
     return;
   }
@@ -630,8 +633,8 @@ async function doRegistra() {
   var consensoMarketing = marketing && marketing.checked ? true : false;
   var fab = calcFab(sx, ps, al, et, at, ob, lav);
   var schede = [
-    {id:'A',nm:'Scheda A',ex:[]},
-    {id:'B',nm:'Scheda B',ex:[]}
+    { id: 'A', nm: 'Scheda A', ex: [] },
+    { id: 'B', nm: 'Scheda B', ex: [] }
   ];
 
   showErr('Creo il profilo...');
@@ -640,21 +643,39 @@ async function doRegistra() {
     email: em,
     password: pw,
     profile: {
-      nm:nm, cg:cg, et:et, sx:sx, ps:ps, al:al, at:at,
-      ob:ob, lav:lav, po:po, fab:fab, schede:schede,
-      act_s:'A', marketing:consensoMarketing
+      nm: nm,
+      cg: cg,
+      et: et,
+      sx: sx,
+      ps: ps,
+      al: al,
+      at: at,
+      ob: ob,
+      lav: lav,
+      po: po,
+      fab: fab,
+      schede: schede,
+      act_s: 'A',
+      marketing: consensoMarketing
     }
   });
 
-  if (!signupRes || !signupRes.userId) {
-    showErr('Registrazione online fallita.');
+  if (!signupRes || signupRes._error || !signupRes.userId) {
+    console.log('SIGNUP ERROR:', signupRes);
+    showErr('Registrazione fallita: ' + (signupRes && signupRes._error ? signupRes._error : 'errore sconosciuto'));
     return;
   }
 
-  var loginRes = await dbCall('signin', { email: em, password: pw });
+  showErr('Profilo creato, eseguo accesso...');
 
-  if (!loginRes || !loginRes.token || !loginRes.userId) {
-    showErr('Profilo creato ma login automatico fallito.');
+  var loginRes = await dbCall('signin', {
+    email: em,
+    password: pw
+  });
+
+  if (!loginRes || loginRes._error || !loginRes.token || !loginRes.userId) {
+    console.log('SIGNIN AFTER SIGNUP ERROR:', loginRes);
+    showErr('Profilo creato ma login automatico fallito: ' + (loginRes && loginRes._error ? loginRes._error : 'errore sconosciuto'));
     return;
   }
 
@@ -669,15 +690,28 @@ async function doRegistra() {
     filter: { id: USER_ID }
   });
 
-  if (pres && pres.result && pres.result.length) {
+  if (pres && !pres._error && pres.result && pres.result.length) {
     CU = supabaseToUser(pres.result[0]);
   } else {
     CU = {
-      id: USER_ID, nm:nm, cg:cg, em:em, pw:'',
-      et:et, sx:sx, ps:ps, al:al, at:at,
-      ob:ob, lav:lav, po:po, fab:fab,
-      schede:schede, actS:'A', apiKey:'',
-      cre:new Date().toISOString()
+      id: USER_ID,
+      nm: nm,
+      cg: cg,
+      em: em,
+      pw: '',
+      et: et,
+      sx: sx,
+      ps: ps,
+      al: al,
+      at: at,
+      ob: ob,
+      lav: lav,
+      po: po,
+      fab: fab,
+      schede: schede,
+      actS: 'A',
+      apiKey: '',
+      cre: new Date().toISOString()
     };
   }
 
@@ -713,7 +747,7 @@ async function ripristinaSessione() {
   USER_ID = userId;
   try {
     var pres = await dbCall('db', {table:'profiles', method:'select', filter:{id: userId}});
-    if (pres && pres.result && pres.result.length) {
+    if (pres && !pres._error && pres.result && pres.result.length) {
       CU = supabaseToUser(pres.result[0]);
       entrApp();
       return true;
@@ -736,9 +770,6 @@ function logout() {
   renderQuick();
 }
 
-// ============================================================
-// NAVIGAZIONE
-// ============================================================
 function mostraPg(p) {
   document.querySelectorAll('.pg').forEach(function(x) { x.className = 'pg'; });
   document.querySelectorAll('.nb').forEach(function(x) { x.className = 'nb'; });
@@ -755,9 +786,6 @@ function mostraPg(p) {
   if (p === 'profilo') renderProfilo();
 }
 
-// ============================================================
-// TIMER
-// ============================================================
 function togTimer() {
   if (tOn) {
     clearInterval(tInt); tOn = false;
@@ -774,9 +802,6 @@ function togTimer() {
   }
 }
 
-// ============================================================
-// LOG PASTI
-// ============================================================
 function getLog(uid, date) {
   var db = loadDB();
   return db.logs[uid + '_' + date] || {pasti:{Colazione:[], Pranzo:[], Cena:[], Spuntino:[]}, kcalBruciate:0, peso:0};
@@ -786,7 +811,7 @@ async function syncLogsFromSupabase() {
   if (!AUTH_TOKEN || !USER_ID) return;
   try {
     var res = await dbCall('db', {table:'logs', method:'select', filter:{user_id: USER_ID}});
-    if (!res || !res.result) return;
+    if (!res || res._error || !res.result) return;
     var db = loadDB();
     res.result.forEach(function(row) {
       var key = USER_ID + '_' + row.data;
@@ -804,7 +829,7 @@ async function syncWorkoutsFromSupabase() {
   if (!AUTH_TOKEN || !USER_ID) return;
   try {
     var res = await dbCall('db', {table:'workouts', method:'select', filter:{user_id: USER_ID}});
-    if (!res || !res.result) return;
+    if (!res || res._error || !res.result) return;
     var db = loadDB();
     res.result.forEach(function(row) {
       var exists = db.workouts.find(function(w) { return w.id === row.id; });
@@ -839,9 +864,6 @@ function getTot(log) {
   return {k: Math.round(k), p: Math.round(p), c: Math.round(c), g: Math.round(g)};
 }
 
-// ============================================================
-// HOME
-// ============================================================
 function renderHome() {
   document.getElementById('greet-nm').textContent = CU.nm;
   var log = getLog(CU.id, curD), tot = getTot(log), tg = CU.fab.kc;
@@ -865,9 +887,6 @@ function renderHome() {
   }
 }
 
-// ============================================================
-// NUTRIZIONE
-// ============================================================
 function chgD(d) {
   var dt = new Date(curD + 'T12:00:00');
   dt.setDate(dt.getDate() + d);
@@ -982,9 +1001,6 @@ function addManuale() {
   renderHome();
 }
 
-// ============================================================
-// WORKOUT
-// ============================================================
 function getScheda(id) { return CU.schede.find(function(s) { return s.id === (id || CU.actS); }); }
 
 function saveUser() {
@@ -1150,9 +1166,6 @@ function stimaKcal(fatti) {
   return Math.round(Math.max(tot, 80));
 }
 
-// ============================================================
-// SCAN SCHEDA AI - 2 passaggi
-// ============================================================
 async function handleScan(e) {
   var files = e.target.files;
   if (!files || !files.length) return;
@@ -1182,7 +1195,8 @@ async function handleScan(e) {
     if (d1.error) throw new Error(d1.error.message);
     var testo = d1.content && d1.content[0] && d1.content[0].text || '';
 
-    var p2 = 'Dati esercizi: ' + testo + ' --- Converti in JSON. Regole: 1) durata in min o sec = tipo tempo, metti in campo tempo. 2) durata in reps o numero = tipo reps, metti in campo reps. 3) RPE = non e kg. 4) BW = peso corporeo. Traduzioni: Treadmill=Tapis Roulant, Upright bike=Cyclette, Arm ergometer=Ergometro braccia, Lat Pulldown=Lat Machine, Chest Press=Panca piana. Rispondi SOLO con questo JSON senza nient altro: {"esercizi":[{"nome":"Cyclette","serie":1,"reps":"","kg":"","tempo":"4 min","note":"RPE 3","tipo":"tempo"},{"nome":"Squat","serie":4,"reps":"20-40","kg":"BW","tempo":"","note":"","tipo":"reps"}]}';
+    var p2 = 'Dati esercizi: ' + testo + ' --- Converti in JSON. Regole: 1) durata in min o sec = tipo tempo, metti in campo tempo. 2) durata in reps o numero = tipo reps, metti in campo reps. 3) RPE = non e kg. 4) BW = peso corporeo. Traduzioni: Treadmill=Tapis Roulant, Upright bike=Cyclette, Arm ergometer=Ergometro braccia, Lat Pulldown=Lat Machine, Chest Press=Panca piana. Rispondi SOLO con questo JSON senza nient altro: {"esercizi":[{"nome":"Cyclette","serie":1,"reps":"","kg":"","tempo":"4 min","note":"RPE 3","tipo":"tempo"},{"nome":"Squat","serie":4,"reps":"20-40","kg":"BW","tempo":"","note":"","tipo":"reps"}]}'
+;
 
     document.getElementById('fn').textContent = 'Struttura esercizi...';
     var d2 = await callAI(key, {model:'claude-sonnet-4-20250514', max_tokens:2000, messages:[{role:'user', content:p2}]});
@@ -1267,9 +1281,6 @@ function aggiungiScansionati() {
   alert(msg + '!');
 }
 
-// ============================================================
-// DIARIO
-// ============================================================
 function salvaPeso() {
   var val = parseFloat(document.getElementById('peso-inp').value) || 0;
   if (val < 20 || val > 300) { alert('Inserisci un peso valido es. 82.5'); return; }
@@ -1369,9 +1380,6 @@ function renderDiario() {
   document.getElementById('diario-list').innerHTML = h;
 }
 
-// ============================================================
-// PROFILO
-// ============================================================
 function renderProfilo() {
   var lavLabel = {sedentario:'Sedentario', piedi:'In piedi', fisico:'Fisico'}[CU.lav] || 'Sedentario';
   var h = '<div class="card" style="text-align:center"><div class="pavbig">' + CU.nm[0] + CU.cg[0] + '</div><div style="font-family:Syne,sans-serif;font-size:20px;font-weight:800">' + CU.nm + ' ' + CU.cg + '</div><div style="font-size:12px;color:var(--mu);margin-top:3px">' + CU.em + '</div></div>';
@@ -1425,9 +1433,6 @@ function aggProfilo() {
   renderProfilo();
 }
 
-// ============================================================
-// PROGRESSI
-// ============================================================
 function avg(arr) {
   if (!arr.length) return 0;
   return arr.reduce(function(a,b){ return a+b; }, 0) / arr.length;
@@ -1528,9 +1533,6 @@ function renderProgress() {
   drawMiniChart('progress-cal-chart', kcal14.slice().reverse(), '#ff6b35');
 }
 
-// ============================================================
-// BACKUP E EXPORT
-// ============================================================
 function downloadFile(filename, content, mime) {
   var blob = new Blob([content], {type: mime || 'text/plain;charset=utf-8'});
   var url = URL.createObjectURL(blob);
@@ -1656,9 +1658,6 @@ function themeSwatchButton(name, label, gradient) {
   return '<button class="theme-btn' + active + '" data-theme="' + name + '" onclick="applyTheme(\'' + name + '\')"><div class="theme-sw" style="background:' + gradient + '"></div><div class="theme-lbl">' + label + '</div></button>';
 }
 
-// ============================================================
-// INIT
-// ============================================================
 loadTheme();
 renderQuick();
 ripristinaSessione();
