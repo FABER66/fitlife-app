@@ -16,20 +16,21 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
+  const action = body.action;
 
-  const AKEY = process.env.ANTHROPIC_API_KEY;
-  const SURL = process.env.SUPABASE_URL;
-  const SKEY = process.env.SUPABASE_KEY; // anon/public
-  const SSERVICE = process.env.SUPABASE_SERVICE_KEY; // service_role
-  const ADMIN_PW = process.env.ADMIN_PASSWORD;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_KEY = process.env.SUPABASE_KEY;
+  const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 
-  function requireEnv(names) {
-    for (const name of names) {
-      if (name === 'ANTHROPIC_API_KEY' && !AKEY) return 'ANTHROPIC_API_KEY mancante';
-      if (name === 'SUPABASE_URL' && !SURL) return 'SUPABASE_URL mancante';
-      if (name === 'SUPABASE_KEY' && !SKEY) return 'SUPABASE_KEY mancante';
-      if (name === 'SUPABASE_SERVICE_KEY' && !SSERVICE) return 'SUPABASE_SERVICE_KEY mancante';
-      if (name === 'ADMIN_PASSWORD' && !ADMIN_PW) return 'ADMIN_PASSWORD mancante';
+  function requireEnv(keys) {
+    for (const key of keys) {
+      if (key === 'SUPABASE_URL' && !SUPABASE_URL) return 'SUPABASE_URL mancante';
+      if (key === 'SUPABASE_KEY' && !SUPABASE_KEY) return 'SUPABASE_KEY mancante';
+      if (key === 'SUPABASE_SERVICE_KEY' && !SUPABASE_SERVICE_KEY) return 'SUPABASE_SERVICE_KEY mancante';
+      if (key === 'ADMIN_PASSWORD' && !ADMIN_PASSWORD) return 'ADMIN_PASSWORD mancante';
+      if (key === 'ANTHROPIC_API_KEY' && !ANTHROPIC_API_KEY) return 'ANTHROPIC_API_KEY mancante';
     }
     return null;
   }
@@ -46,7 +47,7 @@ export default async function handler(req, res) {
     // ============================================================
     // ADMIN
     // ============================================================
-    if (body.action === 'admin') {
+    if (action === 'admin') {
       const envError = requireEnv([
         'SUPABASE_URL',
         'SUPABASE_SERVICE_KEY',
@@ -56,32 +57,32 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: envError });
       }
 
-      if (body.adminPw !== ADMIN_PW) {
+      if (body.adminPw !== ADMIN_PASSWORD) {
         return res.status(401).json({ error: 'Non autorizzato' });
       }
 
-      const [usersRes, workoutsRes] = await Promise.all([
-        fetch(`${SURL}/rest/v1/profiles?select=*`, {
+      const [profilesRes, workoutsRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*`, {
           headers: {
-            apikey: SSERVICE,
-            Authorization: `Bearer ${SSERVICE}`
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
           }
         }),
-        fetch(`${SURL}/rest/v1/workouts?select=id,user_id`, {
+        fetch(`${SUPABASE_URL}/rest/v1/workouts?select=id,user_id`, {
           headers: {
-            apikey: SSERVICE,
-            Authorization: `Bearer ${SSERVICE}`
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
           }
         })
       ]);
 
-      const users = await safeJson(usersRes);
+      const profiles = await safeJson(profilesRes);
       const workouts = await safeJson(workoutsRes);
 
-      if (!usersRes.ok) {
+      if (!profilesRes.ok) {
         return res.status(400).json({
-          error: users?.message || 'Errore lettura profiles',
-          details: users
+          error: profiles?.message || 'Errore lettura profiles',
+          details: profiles
         });
       }
 
@@ -93,7 +94,7 @@ export default async function handler(req, res) {
       }
 
       return res.status(200).json({
-        users: Array.isArray(users) ? users : [],
+        users: Array.isArray(profiles) ? profiles : [],
         workouts: Array.isArray(workouts) ? workouts : []
       });
     }
@@ -101,7 +102,7 @@ export default async function handler(req, res) {
     // ============================================================
     // SIGNUP
     // ============================================================
-    if (body.action === 'signup') {
+    if (action === 'signup') {
       const envError = requireEnv([
         'SUPABASE_URL',
         'SUPABASE_KEY',
@@ -117,12 +118,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Email e password obbligatorie' });
       }
 
-      const signupRes = await fetch(`${SURL}/auth/v1/signup`, {
+      const signupRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          apikey: SKEY,
-          Authorization: `Bearer ${SKEY}`
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
         },
         body: JSON.stringify({ email, password })
       });
@@ -140,8 +141,9 @@ export default async function handler(req, res) {
         });
       }
 
-      const uid = signupData?.user?.id;
-      if (!uid) {
+      const userId = signupData?.user?.id;
+
+      if (!userId) {
         return res.status(400).json({
           error: 'Utente creato ma id non disponibile',
           details: signupData
@@ -149,18 +151,17 @@ export default async function handler(req, res) {
       }
 
       const profilePayload = {
-        id: uid,
+        id: userId,
         em: email,
         ...(profile || {})
       };
 
-      // Scrive il profilo con service_role per bypassare RLS
-      const profileRes = await fetch(`${SURL}/rest/v1/profiles?on_conflict=id`, {
+      const profileRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          apikey: SSERVICE,
-          Authorization: `Bearer ${SSERVICE}`,
+          apikey: SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
           Prefer: 'resolution=merge-duplicates,return=representation'
         },
         body: JSON.stringify(profilePayload)
@@ -177,15 +178,15 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         ok: true,
-        userId: uid,
-        profile: Array.isArray(profileData) ? (profileData[0] || null) : profileData
+        userId,
+        profile: Array.isArray(profileData) ? profileData[0] || null : profileData
       });
     }
 
     // ============================================================
     // SIGNIN
     // ============================================================
-    if (body.action === 'signin') {
+    if (action === 'signin') {
       const envError = requireEnv([
         'SUPABASE_URL',
         'SUPABASE_KEY',
@@ -201,36 +202,36 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Email e password obbligatorie' });
       }
 
-      const loginRes = await fetch(`${SURL}/auth/v1/token?grant_type=password`, {
+      const signinRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          apikey: SKEY,
-          Authorization: `Bearer ${SKEY}`
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`
         },
         body: JSON.stringify({ email, password })
       });
 
-      const loginData = await safeJson(loginRes);
+      const signinData = await safeJson(signinRes);
 
-      if (!loginRes.ok || loginData?.error) {
+      if (!signinRes.ok || signinData?.error) {
         return res.status(400).json({
           error:
-            loginData?.error_description ||
-            loginData?.msg ||
-            loginData?.message ||
+            signinData?.error_description ||
+            signinData?.msg ||
+            signinData?.message ||
             'Login failed',
-          details: loginData
+          details: signinData
         });
       }
 
-      if (loginData?.user?.id) {
-        fetch(`${SURL}/rest/v1/profiles?id=eq.${encodeURIComponent(loginData.user.id)}`, {
+      if (signinData?.user?.id) {
+        fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(signinData.user.id)}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            apikey: SSERVICE,
-            Authorization: `Bearer ${SSERVICE}`
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
           },
           body: JSON.stringify({ last_login: new Date().toISOString() })
         }).catch(() => {});
@@ -238,15 +239,15 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         ok: true,
-        token: loginData?.access_token || null,
-        userId: loginData?.user?.id || null
+        token: signinData?.access_token || null,
+        userId: signinData?.user?.id || null
       });
     }
 
     // ============================================================
     // DATABASE
     // ============================================================
-    if (body.action === 'db') {
+    if (action === 'db') {
       const envError = requireEnv([
         'SUPABASE_URL',
         'SUPABASE_KEY'
@@ -256,21 +257,20 @@ export default async function handler(req, res) {
       }
 
       const { table, method, filter, values, onConflict } = body.data || {};
-      const tok = body.token || SKEY;
+      const token = body.token || SUPABASE_KEY;
 
       if (!table || !method) {
         return res.status(400).json({ error: 'table e method obbligatori' });
       }
 
-      let url = `${SURL}/rest/v1/${table}`;
+      let url = `${SUPABASE_URL}/rest/v1/${table}`;
       const headers = {
         'Content-Type': 'application/json',
-        apikey: SKEY,
-        Authorization: `Bearer ${tok}`,
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${token}`,
         Prefer: 'return=representation'
       };
 
-      // SELECT
       if (method === 'select') {
         const params = new URLSearchParams();
         params.set('select', '*');
@@ -302,7 +302,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // UPSERT
       if (method === 'upsert') {
         const params = new URLSearchParams();
         if (onConflict) params.set('on_conflict', onConflict);
@@ -330,7 +329,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // INSERT
       if (method === 'insert') {
         const dbRes = await fetch(url, {
           method: 'POST',
@@ -352,7 +350,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // UPDATE
       if (method === 'update') {
         const params = new URLSearchParams();
         params.set('select', '*');
@@ -389,7 +386,7 @@ export default async function handler(req, res) {
     }
 
     // ============================================================
-    // AI ANTHROPIC
+    // AI
     // ============================================================
     if (body.payload) {
       const envError = requireEnv(['ANTHROPIC_API_KEY']);
@@ -402,25 +399,26 @@ export default async function handler(req, res) {
         headers: {
           'Content-Type': 'application/json',
           'anthropic-version': '2023-06-01',
-          'x-api-key': AKEY
+          'x-api-key': ANTHROPIC_API_KEY
         },
         body: JSON.stringify(body.payload)
       });
 
-      const ai = await safeJson(aiRes);
+      const aiData = await safeJson(aiRes);
 
       if (!aiRes.ok) {
         return res.status(400).json({
-          error: ai?.error?.message || ai?.error || 'Errore Anthropic',
-          details: ai
+          error: aiData?.error?.message || aiData?.error || 'Errore Anthropic',
+          details: aiData
         });
       }
 
-      return res.status(200).json(ai);
+      return res.status(200).json(aiData);
     }
 
     return res.status(400).json({ error: 'Azione non riconosciuta' });
   } catch (e) {
+    console.error('CHAT API ERROR:', e);
     return res.status(500).json({
       error: e?.message || 'Errore server'
     });
