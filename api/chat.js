@@ -44,9 +44,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ============================================================
-    // ADMIN
-    // ============================================================
     if (action === 'admin') {
       const envError = requireEnv([
         'SUPABASE_URL',
@@ -61,47 +58,30 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Non autorizzato' });
       }
 
-      const [profilesRes, workoutsRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*`, {
-          headers: {
-            apikey: SUPABASE_SERVICE_KEY,
-            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
-          }
-        }),
-        fetch(`${SUPABASE_URL}/rest/v1/workouts?select=id,user_id`, {
-          headers: {
-            apikey: SUPABASE_SERVICE_KEY,
-            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
-          }
-        })
-      ]);
+      const usersRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/admin_users_overview`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_SERVICE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`
+        },
+        body: JSON.stringify({})
+      });
 
-      const profiles = await safeJson(profilesRes);
-      const workouts = await safeJson(workoutsRes);
+      const users = await safeJson(usersRes);
 
-      if (!profilesRes.ok) {
+      if (!usersRes.ok) {
         return res.status(400).json({
-          error: profiles?.message || 'Errore lettura profiles',
-          details: profiles
-        });
-      }
-
-      if (!workoutsRes.ok) {
-        return res.status(400).json({
-          error: workouts?.message || 'Errore lettura workouts',
-          details: workouts
+          error: users?.message || 'Errore lettura utenti admin',
+          details: users
         });
       }
 
       return res.status(200).json({
-        users: Array.isArray(profiles) ? profiles : [],
-        workouts: Array.isArray(workouts) ? workouts : []
+        users: Array.isArray(users) ? users : []
       });
     }
 
-    // ============================================================
-    // SIGNUP
-    // ============================================================
     if (action === 'signup') {
       const envError = requireEnv([
         'SUPABASE_URL',
@@ -145,7 +125,7 @@ export default async function handler(req, res) {
 
       if (!userId) {
         return res.status(400).json({
-          error: 'Utente creato ma id non disponibile',
+          error: 'Email già registrata oppure risposta Auth obfuscata da Supabase',
           details: signupData
         });
       }
@@ -183,9 +163,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ============================================================
-    // SIGNIN
-    // ============================================================
     if (action === 'signin') {
       const envError = requireEnv([
         'SUPABASE_URL',
@@ -244,14 +221,8 @@ export default async function handler(req, res) {
       });
     }
 
-    // ============================================================
-    // DATABASE
-    // ============================================================
     if (action === 'db') {
-      const envError = requireEnv([
-        'SUPABASE_URL',
-        'SUPABASE_KEY'
-      ]);
+      const envError = requireEnv(['SUPABASE_URL', 'SUPABASE_KEY']);
       if (envError) {
         return res.status(500).json({ error: envError });
       }
@@ -283,11 +254,7 @@ export default async function handler(req, res) {
 
         url += `?${params.toString()}`;
 
-        const dbRes = await fetch(url, {
-          method: 'GET',
-          headers
-        });
-
+        const dbRes = await fetch(url, { method: 'GET', headers });
         const result = await safeJson(dbRes);
 
         if (!dbRes.ok) {
@@ -297,9 +264,7 @@ export default async function handler(req, res) {
           });
         }
 
-        return res.status(200).json({
-          result: Array.isArray(result) ? result : []
-        });
+        return res.status(200).json({ result: Array.isArray(result) ? result : [] });
       }
 
       if (method === 'upsert') {
@@ -385,9 +350,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Metodo database non riconosciuto' });
     }
 
-    // ============================================================
-    // AI
-    // ============================================================
     if (body.payload) {
       const envError = requireEnv(['ANTHROPIC_API_KEY']);
       if (envError) {
